@@ -8,4 +8,11 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="MyToolbarTheme"
+        parent="@style/ThemeOverlay.AppCompat.Dark">
+        <item name="colorControlNormal">@color/textColorPrimary</item>
+        <item name="titleTextColor">@color/textColorPrimary</item>
+    </style>
+
 </resources>
+

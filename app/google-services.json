@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "963759500768",
+    "firebase_url": "https://studenttrackingapp-e80da.firebaseio.com",
+    "project_id": "studenttrackingapp-e80da",
+    "storage_bucket": "studenttrackingapp-e80da.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:963759500768:android:1ab54ddff369bcfa",
+        "android_client_info": {
+          "package_name": "com.example.studenttrackingapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "963759500768-glj6vdipbpcvros4ld6ulf827fqthe3k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDyZIhHH9mQLN-cXLB6irTzKo2rsXmuzKU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "963759500768-glj6vdipbpcvros4ld6ulf827fqthe3k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

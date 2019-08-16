@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/addSchool"
+        android:title="Add School" />
+    <item
+        android:id="@+id/editDetails"
+        android:title="Edit School Details" />
+    <item
+        android:id="@+id/addUsers"
+        android:title="Add Users" />
+    <item
+        android:id="@+id/logoutItem"
+        android:title="Logout" />
+</menu>
