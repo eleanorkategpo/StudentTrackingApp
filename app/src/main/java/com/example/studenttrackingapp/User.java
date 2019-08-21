@@ -1,25 +1,30 @@
 package com.example.studenttrackingapp;
 
 public class User {
-    public String userId, name, gender, birthday, email, password, address, phoneNumber, schoolId;
-    public int isActive, userType; //1- Admin, 2- Parent, 3-Student
+    public String userId, name, gender, birthday, email,  address, phoneNumber, schoolId, year, section, childId;
+    public boolean isActive, isSchoolAdmin, isSuperAdmin;
+    public int userType; //1- Admin, 2- Parent, 3-Student
 
     public User() {
 
     }
 
-    public User(String userId, String name, String gender, String birthday, String email, String password, String address, String phoneNumber,  String schoolId, int isActive, int userType) {
+    public User(String userId, String name, String gender, String birthday, String email, String address, String phoneNumber,  String schoolId, String year, String section, String childId, boolean isActive, int userType, boolean isSchoolAdmin, boolean isSuperAdmin) {
         this.userId = userId;
         this.name = name;
         this.gender = gender;
         this.birthday = birthday;
         this.email = email;
-        this.password = password;
         this.address = address;
         this.phoneNumber = phoneNumber;
         this.schoolId = schoolId;
+        this.year = year;
+        this.section = section;
+        this.childId = childId;
         this.isActive = isActive;
         this.userType = userType;
+        this.isSchoolAdmin = isSchoolAdmin;
+        this.isSuperAdmin = isSuperAdmin;
     }
 
     public String getUserId() {
@@ -42,10 +47,6 @@ public class User {
         return email;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
     public String getAddress() {
         return address;
     }
@@ -58,12 +59,32 @@ public class User {
         return schoolId;
     }
 
-    public int getIsActive() {
-        return isActive;
+    public String getYear() {
+        return year;
+    }
+
+    public String getSection() {
+        return section;
+    }
+
+    public String getChildId() {
+        return childId;
     }
 
     public int getUserType() {
         return userType;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public boolean isSchoolAdmin() {
+        return isSchoolAdmin;
+    }
+
+    public boolean isSuperAdmin() {
+        return isSuperAdmin;
     }
 
     public void setUserId(String userId) {
@@ -86,10 +107,6 @@ public class User {
         this.email = email;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public void setAddress(String address) {
         this.address = address;
     }
@@ -102,11 +119,31 @@ public class User {
         this.schoolId = schoolId;
     }
 
-    public void setIsActive(int isActive) {
-        this.isActive = isActive;
+    public void setYear(String year) {
+        this.year = year;
+    }
+
+    public void setSection(String section) {
+        this.section = section;
+    }
+
+    public void setChildId(String childId) {
+        this.childId = childId;
     }
 
     public void setUserType(int userType) {
         this.userType = userType;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
+    }
+
+    public void setSchoolAdmin(boolean schoolAdmin) {
+        isSchoolAdmin = schoolAdmin;
+    }
+
+    public void setSuperAdmin(boolean superAdmin) {
+        isSuperAdmin = superAdmin;
     }
 }

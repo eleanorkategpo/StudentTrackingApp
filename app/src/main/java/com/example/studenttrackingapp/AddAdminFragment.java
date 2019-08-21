@@ -1,7 +1,6 @@
 package com.example.studenttrackingapp;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,10 +9,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
@@ -22,10 +19,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class AddAdminFragment extends Fragment {
     private EditText Name, Birthday, Email, Password, Address, PhoneNumber;
@@ -49,6 +42,7 @@ public class AddAdminFragment extends Fragment {
         setupUIViews();
         initLayout();
     }
+
     private void setupUIViews() {
         AddBtn = (Button)getView().findViewById(R.id.addBtn);
         Name = (EditText)getView().findViewById(R.id.name);
@@ -129,14 +123,13 @@ public class AddAdminFragment extends Fragment {
 
 
     private void addAdmin() {
-        //name, gender, birthday, email, password=temporarypass, address, phoneNumber, isActive=1, userType = 1;
+        //name, gender, birthday, email, password=temporarypass, address, phoneNumber, year = null, section = null, isActive=1, userType = 1;
 
         progressDialog.setMessage("Creating user...");
         progressDialog.show();
 
         userTable = FirebaseDatabase.getInstance().getReference("Users");
         firebaseAuth = FirebaseAuth.getInstance();
-        String id = userTable.push().getKey();
 
         firebaseAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
@@ -144,7 +137,7 @@ public class AddAdminFragment extends Fragment {
                 if (task.isSuccessful()) {
                     FirebaseUser newUser = task.getResult().getUser();
 
-                    User user = new User(newUser.getUid(), name, gender, birthday, email, "temporarypassword", address, phone_number, school_id, 1, 1);
+                    User user = new User(newUser.getUid(), name, gender, birthday, email, address, phone_number, school_id, "", "", "", true, 1, true, false);
 
                     userTable.child(newUser.getUid()).setValue(user).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override

@@ -54,13 +54,12 @@ public class LoginActivity extends AppCompatActivity {
         firebaseAuth = FirebaseAuth.getInstance();
         progressDialog = new ProgressDialog(this);
 
-        user = firebaseAuth.getCurrentUser();
+        /*user = firebaseAuth.getCurrentUser();
         if (user != null) {
             finish();
-
             //add condition based on usertype
             startActivity(new Intent(LoginActivity.this, SchoolAdminActivity.class));
-        }
+        }*/
     }
 
     private void validate(String email, String password) {
@@ -77,10 +76,7 @@ public class LoginActivity extends AppCompatActivity {
                     if (task.isSuccessful()){
                         progressDialog.dismiss();
                         Toast.makeText(LoginActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
-
                         getUserType();
-
-
                     }
                 }
             }).addOnFailureListener(new OnFailureListener() {
@@ -94,7 +90,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void getUserType() {
-        String user_id = user.getUid();
+        //String user_id = user.getUid();
 
         //School Activity
         Intent intent = new Intent(LoginActivity.this, SchoolAdminActivity.class);

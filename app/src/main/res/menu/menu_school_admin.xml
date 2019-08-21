@@ -2,11 +2,8 @@
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/addSchool"
-        android:title="Add School" />
-    <item
-        android:id="@+id/editDetails"
-        android:title="Edit School Details" />
+        android:id="@+id/addEditSchool"
+        android:title="Add/Edit School" />
     <item
         android:id="@+id/addUsers"
         android:title="Add Users" />

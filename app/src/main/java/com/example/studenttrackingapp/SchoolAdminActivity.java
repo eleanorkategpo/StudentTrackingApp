@@ -1,53 +1,99 @@
 package com.example.studenttrackingapp;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
-public class SchoolAdminActivity extends AppCompatActivity {
+import java.util.ArrayList;
+import java.util.List;
+
+public class SchoolAdminActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener, StudentAdapter.OnRequestListener {
     private FirebaseAuth firebaseAuth;
-    private String school_id;
+    private FirebaseUser firebaseUser;
+    private ProgressDialog progressDialog;
+    private RecyclerView StudentList;
+    private Spinner allSchools;
+    private TextView noData;
+
+    private String SCHOOL_ID;
+    private ArrayList<User> studentList = new ArrayList<>();
+    private ArrayList<School> schoolList = new ArrayList<>();
+    private ArrayList<String> listOfSchools = new ArrayList<>();
+    private ArrayAdapter<String> adapter;
+    private StudentAdapter studentAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_school_admin);
         setupUIViews();
 
-        getSchool();
+        getSchoolOfUser();
     }
 
     private void setupUIViews() {
+        noData = (TextView)findViewById(R.id.noData);
+
         firebaseAuth = FirebaseAuth.getInstance();
+        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        progressDialog = new ProgressDialog(this);
+
+        allSchools = (Spinner)findViewById(R.id.changeSchool);
+        listOfSchools.add("-- Select school --");
+        allSchools.setSelection(0);
+
+        StudentList = (RecyclerView)findViewById(R.id.studentList);
+        StudentList.setHasFixedSize(true);
+        StudentList.setLayoutManager(new LinearLayoutManager(this));
     }
 
-    private void getSchool() {
-        Query currentUser = FirebaseDatabase.getInstance().getReference("Users")
-                .orderByChild("user_id")
-                .equalTo(firebaseAuth.getUid());
+    private void getSchoolOfUser() {
+        progressDialog.setMessage("Loading data...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
+        Query currentUser = FirebaseDatabase.getInstance().getReference("Users").child(firebaseAuth.getUid());
 
         currentUser.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    for (DataSnapshot snap : dataSnapshot.getChildren()) {
-                        User user = snap.getValue(User.class);
-                        school_id = user.getSchoolId();
-                    }
+                    User user = dataSnapshot.getValue(User.class);
+                    SCHOOL_ID = user.getSchoolId();
+                    getAllSchools();
+
+                    allSchools.setEnabled(false);
+                } else {
+                    Toast.makeText(SchoolAdminActivity.this, "User not found", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(SchoolAdminActivity.this, LoginActivity.class));
+                    progressDialog.dismiss();
                 }
             }
 
@@ -59,6 +105,89 @@ public class SchoolAdminActivity extends AppCompatActivity {
 
     }
 
+    private void getAllSchools() {
+        Query currentUser = FirebaseDatabase.getInstance().getReference("Schools")
+                .orderByChild("schoolName");
+
+        currentUser.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                School school = dataSnapshot.getValue(School.class);
+                schoolList.add(school);
+                listOfSchools.add(school.getSchoolName());
+
+                if (dataSnapshot.getKey().equals(SCHOOL_ID)){
+                    int size = schoolList.size() - 1;
+                    allSchools.setSelection(size);
+                }
+
+                progressDialog.dismiss();
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+        adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, listOfSchools);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        allSchools.setAdapter(adapter);
+        allSchools.setOnItemSelectedListener(this);
+    }
+
+    private void getAllStudentsBySchool(int i){
+        //get students by school
+
+        Query currentUser = FirebaseDatabase.getInstance().getReference("Users")
+                .orderByChild("schoolId")
+                .equalTo(SCHOOL_ID);
+
+        currentUser.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                User user = dataSnapshot.getValue(User.class);
+                if (user.getUserType() == 3) {
+                    studentList.add(user);
+                }
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -69,19 +198,28 @@ public class SchoolAdminActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        Intent intent = null;
         switch (item.getItemId()) {
-            case R.id.addSchool:
-                intent = new Intent(SchoolAdminActivity.this, SchoolActivity.class);
-                intent.putExtra("SCHOOL_STATUS", "add");
-                intent.putExtra("SCHOOL_ID", "");
+            case R.id.addEditSchool:
+                progressDialog.setMessage("Checking existing school");
+                progressDialog.setCancelable(false);
+                progressDialog.show();
+
+                Intent intent = new Intent(SchoolAdminActivity.this, SchoolActivity.class);
+
+                if (SCHOOL_ID.isEmpty()) {
+                    intent.putExtra("SCHOOL_STATUS", "add");
+                    intent.putExtra("SCHOOL_ID", "0");
+                } else {
+                    intent.putExtra("SCHOOL_STATUS", "edit");
+                    intent.putExtra("SCHOOL_ID", SCHOOL_ID);
+                }
+
+                intent.putExtra("ADDRESS", "0");
+                intent.putExtra("LATITUDE", "0");
+                intent.putExtra("LONGITUDE", "0");
                 startActivity(intent);
-                return true;
-            case R.id.editDetails:
-                intent = new Intent(SchoolAdminActivity.this, SchoolActivity.class);
-                intent.putExtra("SCHOOL_STATUS", "edit");
-                intent.putExtra("SCHOOL_ID", school_id);
-                startActivity(intent);
+                progressDialog.dismiss();
+
                 return true;
             case R.id.addUsers:
                 startActivity(new Intent(SchoolAdminActivity.this, RegisterActivity.class));
@@ -115,4 +253,30 @@ public class SchoolAdminActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+        getAllStudentsBySchool(i);
+
+        if (studentList.size() == 0) {
+            noData.setVisibility(View.VISIBLE);
+        } else {
+            noData.setVisibility(View.INVISIBLE);
+        }
+
+        studentAdapter = new StudentAdapter(this, studentList, this );
+        StudentList.setAdapter(studentAdapter);
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> adapterView) {
+
+    }
+
+    @Override
+    public void onRequestClick(int position) {
+        /*FirstAidRequest request = requestList.get(position);
+        Intent intent = new Intent(RecipientRequests.this, RecipientSuccessActivity.class);
+        intent.putExtra("REQUEST_ID", request.getId());
+        startActivity(intent);*/
+    }
 }
