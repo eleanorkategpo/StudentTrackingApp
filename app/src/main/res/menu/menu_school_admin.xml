@@ -2,6 +2,15 @@
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
     <item
+        android:id="@+id/editProfile"
+        android:title="Edit Profile" />
+    <item
+        android:id="@+id/viewStudents"
+        android:title="View Students" />
+    <item
+        android:id="@+id/viewAdmins"
+        android:title="View Admins" />
+    <item
         android:id="@+id/addEditSchool"
         android:title="Add/Edit School" />
     <item

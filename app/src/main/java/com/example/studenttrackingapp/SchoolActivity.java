@@ -160,7 +160,7 @@ public class SchoolActivity extends AppCompatActivity {
             String id = schoolsTable.push().getKey();
 
             //String schoolName, String schoolAddress, String schoolPhone, String schoolLat, String schoolLong
-            School school = new School(name, address, phonenumber, latitude, longitude);
+            School school = new School(id, name, address, phonenumber, latitude, longitude);
 
             schoolsTable.child(id).setValue(school).addOnCompleteListener(new OnCompleteListener<Void>() {
                 @Override

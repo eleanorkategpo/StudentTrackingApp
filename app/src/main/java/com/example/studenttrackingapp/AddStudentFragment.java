@@ -6,12 +6,16 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioButton;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -20,19 +24,31 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
-public class AddStudentFragment extends Fragment {
+import java.util.ArrayList;
+
+public class AddStudentFragment extends Fragment implements AdapterView.OnItemSelectedListener{
     private EditText Name, Birthday, Email, Password, Address, PhoneNumber, Year, Section;
     private RadioButton Female, Male;
     private Button AddBtn;
-    private String name, gender, birthday, email, password, address, phone_number, school_id, year, section;
+    private String name, gender, birthday, email, password, address, phone_number, SCHOOL_ID, year, section;
+    private Spinner School;
 
     private ProgressDialog progressDialog;
     private DatabaseReference userTable;
     private FirebaseAuth firebaseAuth;
 
+    private ArrayList<School> schoolList = new ArrayList<>();
+    private ArrayList<String> listOfSchools = new ArrayList<>();
+    private ArrayList<String> listOfYear = new ArrayList<>();
+    private ArrayAdapter<String> adapter;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.activity_register_student, container, false);
@@ -45,9 +61,12 @@ public class AddStudentFragment extends Fragment {
         setupUIViews();
         initLayout();
         getStrings();
+        SCHOOL_ID = getSchool();
     }
 
     private void setupUIViews(){
+        firebaseAuth = FirebaseAuth.getInstance();
+
         AddBtn = (Button)getView().findViewById(R.id.addBtn);
         Name = (EditText)getView().findViewById(R.id.name);
         Female = (RadioButton)getView().findViewById(R.id.female);
@@ -62,6 +81,11 @@ public class AddStudentFragment extends Fragment {
         Year = (EditText)getView().findViewById(R.id.year);
         Section = (EditText)getView().findViewById(R.id.section);
         progressDialog = new ProgressDialog(this.getContext());
+
+        School = (Spinner)getView().findViewById(R.id.changeSchool);
+        School.setEnabled(false);
+        listOfSchools.add("-- Select school --");
+        School.setSelection(0);
     }
 
     private void initLayout(){
@@ -99,7 +123,11 @@ public class AddStudentFragment extends Fragment {
         phone_number = PhoneNumber.getText().toString();
         year = Year.getText().toString();
         section = Section.getText().toString();
-        school_id = "";
+
+        listOfYear.add("1st Year");
+        listOfYear.add("2nd Year");
+        listOfYear.add("3rd Year");
+        listOfYear.add("4th Year");
     }
 
     private boolean validate() {
@@ -141,7 +169,7 @@ public class AddStudentFragment extends Fragment {
                 if (task.isSuccessful()) {
                     FirebaseUser newUser = task.getResult().getUser();
 
-                    User user = new User(newUser.getUid(), name, gender, birthday, email, address, phone_number, school_id, year, section, "", true, 2, false, false);
+                    User user = new User(newUser.getUid(), name, gender, birthday, email, address, phone_number, SCHOOL_ID, year, section, "", true, 3, false, false);
 
                     userTable.child(newUser.getUid()).setValue(user).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
@@ -168,5 +196,96 @@ public class AddStudentFragment extends Fragment {
                 progressDialog.dismiss();
             }
         });
+    }
+
+    private String getSchool(){
+        progressDialog.setMessage("Loading data..");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
+        final String[] school_id = new String[1];
+
+        Query currentUser = FirebaseDatabase.getInstance().getReference("Users").child(firebaseAuth.getUid());
+
+        currentUser.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    User user = dataSnapshot.getValue(User.class);
+                    school_id[0] = user.getSchoolId();
+
+                    if (user.isSuperAdmin()){
+                        populateSchools();
+                        School.setEnabled(true);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+        return school_id[0];
+    }
+
+    private void populateSchools() {
+        Query currentUser = FirebaseDatabase.getInstance().getReference("Schools")
+                .orderByChild("schoolName");
+
+        currentUser.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                School school = dataSnapshot.getValue(School.class);
+                schoolList.add(school);
+                listOfSchools.add(school.getSchoolName());
+
+                if (dataSnapshot.getKey().equals(SCHOOL_ID)){
+                    int size = schoolList.size();
+                    School.setSelection(size);
+                }
+
+                progressDialog.dismiss();
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+        adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, listOfSchools);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        School.setAdapter(adapter);
+        School.setOnItemSelectedListener(this);
+
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+        if (i != 0) { // not --select type--
+            School school = schoolList.get(i - 1);
+            SCHOOL_ID = school.getSchoolId();
+        }
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> adapterView) {
+
     }
 }

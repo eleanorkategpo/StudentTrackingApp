@@ -19,6 +19,12 @@
                 android:layout_height="wrap_content"
                 android:text="Note: Name and Email is required. You may leave other fields blank. Password is set to 'temporarypassword' and can only be changed by the user.\n"
                 android:textStyle="italic"/>
+            <Spinner
+                android:id="@+id/changeSchool"
+                android:padding="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="40dp">
+            </Spinner>
             <EditText
                 android:id="@+id/name"
                 android:layout_width="wrap_content"

@@ -43,7 +43,8 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentA
         holder.studentID.setText("Student ID: " +  student.getUserId());
         holder.studentName.setText(student.getName());
         holder.schoolName.setText(getSchoolName(student.getSchoolId()));
-        holder.yearAndSection.setText(student.getYear() + " - " + student.getSection());
+        String year = student.getYear() + " - " + student.getSection();
+        holder.yearAndSection.setText(year.equals(" - ") ? "N/A" : year);
     }
 
     @Override

@@ -54,7 +54,7 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_school_admin);
         setupUIViews();
-
+        initLayout();
         getSchoolOfUser();
     }
 
@@ -66,12 +66,16 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
         progressDialog = new ProgressDialog(this);
 
         allSchools = (Spinner)findViewById(R.id.changeSchool);
+        allSchools.setEnabled(false);
         listOfSchools.add("-- Select school --");
         allSchools.setSelection(0);
 
         StudentList = (RecyclerView)findViewById(R.id.studentList);
         StudentList.setHasFixedSize(true);
         StudentList.setLayoutManager(new LinearLayoutManager(this));
+    }
+
+    private void initLayout() {
     }
 
     private void getSchoolOfUser() {
@@ -88,8 +92,11 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
                     User user = dataSnapshot.getValue(User.class);
                     SCHOOL_ID = user.getSchoolId();
                     getAllSchools();
+                    progressDialog.dismiss();
 
-                    allSchools.setEnabled(false);
+                    if (user.isSuperAdmin()){
+                        allSchools.setEnabled(true);
+                    }
                 } else {
                     Toast.makeText(SchoolAdminActivity.this, "User not found", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(SchoolAdminActivity.this, LoginActivity.class));
@@ -117,11 +124,9 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
                 listOfSchools.add(school.getSchoolName());
 
                 if (dataSnapshot.getKey().equals(SCHOOL_ID)){
-                    int size = schoolList.size() - 1;
+                    int size = schoolList.size();
                     allSchools.setSelection(size);
                 }
-
-                progressDialog.dismiss();
             }
 
             @Override
@@ -151,13 +156,12 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
         allSchools.setOnItemSelectedListener(this);
     }
 
-    private void getAllStudentsBySchool(int i){
+    private void getAllStudentsBySchool(){
         //get students by school
 
         Query currentUser = FirebaseDatabase.getInstance().getReference("Users")
                 .orderByChild("schoolId")
                 .equalTo(SCHOOL_ID);
-
         currentUser.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
@@ -165,6 +169,7 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
                 if (user.getUserType() == 3) {
                     studentList.add(user);
                 }
+                setupRV();
             }
 
             @Override
@@ -189,6 +194,18 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
         });
     }
 
+    private void setupRV() {
+        studentAdapter = new StudentAdapter(this, studentList, this );
+        StudentList.setAdapter(studentAdapter);
+
+        if (studentList.size() == 0) {
+            noData.setVisibility(View.VISIBLE);
+        } else {
+            noData.setVisibility(View.INVISIBLE);
+        }
+
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -199,6 +216,13 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.editProfile:
+                break;
+            case R.id.viewAdmins:
+                break;
+            case R.id.viewStudents:
+                startActivity(new Intent(SchoolAdminActivity.this, SchoolAdminActivity.class));
+                break;
             case R.id.addEditSchool:
                 progressDialog.setMessage("Checking existing school");
                 progressDialog.setCancelable(false);
@@ -255,16 +279,15 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
 
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-        getAllStudentsBySchool(i);
 
-        if (studentList.size() == 0) {
-            noData.setVisibility(View.VISIBLE);
+        if(i != 0) {
+            School school = schoolList.get(i - 1);
+            SCHOOL_ID = school.getSchoolId();
+
+            getAllStudentsBySchool();
         } else {
-            noData.setVisibility(View.INVISIBLE);
+            noData.setVisibility(View.VISIBLE);
         }
-
-        studentAdapter = new StudentAdapter(this, studentList, this );
-        StudentList.setAdapter(studentAdapter);
     }
 
     @Override

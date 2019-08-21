@@ -1,18 +1,23 @@
 package com.example.studenttrackingapp;
 
 public class School {
-    private String schoolName, schoolAddress, schoolPhone, schoolLat, schoolLong;
+    private String schoolId, schoolName, schoolAddress, schoolPhone, schoolLat, schoolLong;
 
     public School(){
 
     }
 
-    public School(String schoolName, String schoolAddress, String schoolPhone, String schoolLat, String schoolLong) {
+    public School(String schoolId, String schoolName, String schoolAddress, String schoolPhone, String schoolLat, String schoolLong) {
+        this.schoolId = schoolId;
         this.schoolName = schoolName;
         this.schoolAddress = schoolAddress;
         this.schoolPhone = schoolPhone;
         this.schoolLat = schoolLat;
         this.schoolLong = schoolLong;
+    }
+
+    public String getSchoolId() {
+        return schoolId;
     }
 
     public String getSchoolName() {
@@ -33,6 +38,10 @@ public class School {
 
     public String getSchoolLong() {
         return schoolLong;
+    }
+
+    public void setSchoolId(String schoolId) {
+        this.schoolId = schoolId;
     }
 
     public void setSchoolName(String schoolName) {
