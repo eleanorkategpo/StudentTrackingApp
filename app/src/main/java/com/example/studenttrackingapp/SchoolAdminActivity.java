@@ -73,6 +73,9 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
         StudentList = (RecyclerView)findViewById(R.id.studentList);
         StudentList.setHasFixedSize(true);
         StudentList.setLayoutManager(new LinearLayoutManager(this));
+
+        studentList.clear();
+        schoolList.clear();
     }
 
     private void initLayout() {
@@ -158,18 +161,21 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
 
     private void getAllStudentsBySchool(){
         //get students by school
+        progressDialog.setMessage("Your data is loading...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
 
         Query currentUser = FirebaseDatabase.getInstance().getReference("Users")
                 .orderByChild("schoolId")
                 .equalTo(SCHOOL_ID);
-        currentUser.addChildEventListener(new ChildEventListener() {
+
+        /* currentUser.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 User user = dataSnapshot.getValue(User.class);
                 if (user.getUserType() == 3) {
                     studentList.add(user);
                 }
-                setupRV();
             }
 
             @Override
@@ -185,6 +191,27 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
             @Override
             public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });*/
+
+        currentUser.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    for (DataSnapshot snap : dataSnapshot.getChildren()) {
+                        User user = snap.getValue(User.class);
+                        if (user.getUserType() == 3) {
+                            studentList.add(user);
+                        }
+                    }
+                    setupRV();
+                    progressDialog.dismiss();
+                }
             }
 
             @Override

@@ -33,12 +33,6 @@
                 android:padding="5dp"
                 android:background="@color/colorPrimary"
                 android:textColor="@color/colorOnPrimary"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textStyle="italic"
-                android:text="(School)"/>
             <TextView
                 android:id="@+id/schoolName"
                 android:layout_width="wrap_content"

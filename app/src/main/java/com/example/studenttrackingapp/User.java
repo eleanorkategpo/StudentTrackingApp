@@ -1,7 +1,7 @@
 package com.example.studenttrackingapp;
 
 public class User {
-    public String userId, name, gender, birthday, email,  address, phoneNumber, schoolId, year, section, childId;
+    public String userId, firstName, lastName, gender, birthday, email,  address, phoneNumber, schoolId, year, section, childId;
     public boolean isActive, isSchoolAdmin, isSuperAdmin;
     public int userType; //1- Admin, 2- Parent, 3-Student
 
@@ -9,9 +9,10 @@ public class User {
 
     }
 
-    public User(String userId, String name, String gender, String birthday, String email, String address, String phoneNumber,  String schoolId, String year, String section, String childId, boolean isActive, int userType, boolean isSchoolAdmin, boolean isSuperAdmin) {
+    public User(String userId, String firstName, String lastName, String gender, String birthday, String email, String address, String phoneNumber,  String schoolId, String year, String section, String childId, boolean isActive, int userType, boolean isSchoolAdmin, boolean isSuperAdmin) {
         this.userId = userId;
-        this.name = name;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.gender = gender;
         this.birthday = birthday;
         this.email = email;
@@ -31,8 +32,12 @@ public class User {
         return userId;
     }
 
-    public String getName() {
-        return name;
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
     }
 
     public String getGender() {
@@ -91,8 +96,12 @@ public class User {
         this.userId = userId;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public void setGender(String gender) {

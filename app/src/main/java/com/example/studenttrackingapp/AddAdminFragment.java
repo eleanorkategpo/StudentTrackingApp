@@ -1,5 +1,7 @@
 package com.example.studenttrackingapp;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -32,10 +34,10 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 
 public class AddAdminFragment extends Fragment implements AdapterView.OnItemSelectedListener {
-    private EditText Name, Birthday, Email, Password, Address, PhoneNumber;
+    private EditText FName, LName, Birthday, Email, Password, Address, PhoneNumber;
     private RadioButton Female, Male;
     private Button AddBtn;
-    private String name, gender, birthday, email, password, address, phone_number, SCHOOL_ID;
+    private String fname, lname, gender, birthday, email, password, address, phone_number, SCHOOL_ID;
     private Spinner School;
 
     private ProgressDialog progressDialog;
@@ -64,7 +66,8 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
 
     private void setupUIViews() {
         AddBtn = (Button)getView().findViewById(R.id.addBtn);
-        Name = (EditText)getView().findViewById(R.id.name);
+        FName = (EditText)getView().findViewById(R.id.fname);
+        LName = (EditText)getView().findViewById(R.id.lname);
         Female = (RadioButton)getView().findViewById(R.id.female);
         Male = (RadioButton)getView().findViewById(R.id.male);
         Birthday = (EditText)getView().findViewById(R.id.birthday);
@@ -91,7 +94,24 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
             @Override
             public void onClick(View view) {
                 if(validate()) {
-                    addAdmin();
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                    builder.setMessage("Your session will end after creating the user. Continue?")
+                            .setCancelable(false)
+                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    addAdmin();
+                                }
+                            })
+                            .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.cancel();
+                                }
+                            });
+
+                    AlertDialog alertDialog = builder.create();
+                    alertDialog.show();
                 }
             }
         });
@@ -114,7 +134,8 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
     }
 
     private void getStrings() {
-        name = Name.getText().toString();
+        fname = FName.getText().toString();
+        lname = LName.getText().toString();
         birthday = Birthday.getText().toString().trim();
         gender = (Female.isChecked()) ? "Female" : "Male";
         email = Email.getText().toString();
@@ -127,7 +148,7 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
         getStrings();
         String email_regex = "^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$";
 
-        if (email.isEmpty() || name.isEmpty()) {
+        if (email.isEmpty() || fname.isEmpty() || lname.isEmpty()) {
             Toast.makeText(this.getContext(), "Please input name and " +
                     "email of the user.", Toast.LENGTH_SHORT).show();
         }
@@ -148,8 +169,7 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
     }
 
     private void addAdmin() {
-        //name, gender, birthday, email, password=temporarypass, address, phoneNumber, year = null, section = null, isActive=1, userType = 1;
-
+        //name, gender, birthday, email, password=temporarypass, address, phoneNumber, year = null, section = null, isActive=1, userType = 1;/
         progressDialog.setMessage("Creating user...");
         progressDialog.show();
 
@@ -159,7 +179,7 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
                 if (task.isSuccessful()) {
                     FirebaseUser newUser = task.getResult().getUser();
 
-                    User user = new User(newUser.getUid(), name, gender, birthday, email, address, phone_number, SCHOOL_ID, "", "", "", true, 1, true, false);
+                    User user = new User(newUser.getUid(), fname, lname, gender, birthday, email, address, phone_number, SCHOOL_ID, "", "", "", true, 1, true, false);
 
                     userTable.child(newUser.getUid()).setValue(user).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
@@ -271,6 +291,8 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
         if (i != 0) { // not --select type--
             School school = schoolList.get(i - 1);
             SCHOOL_ID = school.getSchoolId();
+        } else {
+            SCHOOL_ID = "";
         }
     }
 

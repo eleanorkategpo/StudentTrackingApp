@@ -26,12 +26,20 @@
                 android:layout_height="40dp">
             </Spinner>
             <EditText
-                android:id="@+id/name"
+                android:id="@+id/fname"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 android:ems="10"
-                android:hint="Name"
+                android:hint="First Name"
+                android:inputType="textPersonName"/>
+            <EditText
+                android:id="@+id/lname"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:ems="10"
+                android:hint="Last Name"
                 android:inputType="textPersonName"/>
             <LinearLayout
                 android:id="@+id/gender"
@@ -92,22 +100,17 @@
                 android:ems="10"
                 android:hint="Phone Number"
                 android:inputType="text|phone"/>
-            <EditText
+
+            <Spinner
                 android:id="@+id/year"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:ems="10"
-                android:hint="Year"
-                android:inputType="text"/>
-            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:padding="10dp"/>
+            <Spinner
                 android:id="@+id/section"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:ems="10"
-                android:hint="Section"
-                android:inputType="text"/>
+                android:layout_width="match_parent"
+                android:padding="10dp"
+                android:layout_height="40dp"/>
             <Button
                 android:id="@+id/addBtn"
                 android:layout_width="wrap_content"

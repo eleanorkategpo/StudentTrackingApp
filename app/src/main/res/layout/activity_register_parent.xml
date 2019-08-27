@@ -26,12 +26,20 @@
                 android:layout_height="40dp">
             </Spinner>
             <EditText
-                android:id="@+id/name"
+                android:id="@+id/fname"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 android:ems="10"
-                android:hint="Name"
+                android:hint="First Name"
+                android:inputType="textPersonName"/>
+            <EditText
+                android:id="@+id/lname"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:ems="10"
+                android:hint="Last Name"
                 android:inputType="textPersonName"/>
             <LinearLayout
                 android:id="@+id/gender"
@@ -92,14 +100,20 @@
                 android:ems="10"
                 android:hint="Phone Number"
                 android:inputType="text|phone"/>
-            <EditText
+            <!--<EditText
                 android:id="@+id/myChild"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 android:ems="10"
                 android:hint="Child Here"
-                android:inputType="text"/>
+                android:inputType="text"/>-->
+            <Spinner
+                android:id="@+id/myChild"
+                android:padding="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="40dp">
+            </Spinner>
             <Button
                 android:id="@+id/addBtn"
                 android:layout_width="wrap_content"

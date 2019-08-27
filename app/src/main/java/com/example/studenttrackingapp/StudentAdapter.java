@@ -41,10 +41,25 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentA
     public void onBindViewHolder(@NonNull StudentAdapterViewHolder holder, int position) {
         User student = studentList.get(position);
         holder.studentID.setText("Student ID: " +  student.getUserId());
-        holder.studentName.setText(student.getName());
-        holder.schoolName.setText(getSchoolName(student.getSchoolId()));
+        holder.studentName.setText(student.getLastName() + ", " + student.getFirstName());
         String year = student.getYear() + " - " + student.getSection();
         holder.yearAndSection.setText(year.equals(" - ") ? "N/A" : year);
+
+        Query user = FirebaseDatabase.getInstance().getReference("Schools").child(student.getSchoolId());
+        user.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    School school = dataSnapshot.getValue(School.class);
+                    holder.schoolName.setText(school.getSchoolName());
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     @Override
@@ -76,25 +91,5 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentA
 
     public interface OnRequestListener {
         void onRequestClick(int position);
-    }
-
-    private String getSchoolName(String id) {
-        final String[] name = new String[1];
-        Query user = FirebaseDatabase.getInstance().getReference("Schools").child(id);
-        user.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    School school = dataSnapshot.getValue(School.class);
-                    name[0] = school.getSchoolName();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-        return name[0];
     }
 }

@@ -54,12 +54,12 @@ public class LoginActivity extends AppCompatActivity {
         firebaseAuth = FirebaseAuth.getInstance();
         progressDialog = new ProgressDialog(this);
 
-        user = firebaseAuth.getCurrentUser();
+       /* user = firebaseAuth.getCurrentUser();
         if (user != null) {
             finish();
             //add condition based on usertype
             startActivity(new Intent(LoginActivity.this, SchoolAdminActivity.class));
-        }
+        }*/
     }
 
     private void validate(String email, String password) {
