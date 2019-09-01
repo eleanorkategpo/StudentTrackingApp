@@ -83,11 +83,15 @@ public class AddParentFragment extends Fragment implements AdapterView.OnItemSel
 
         School = (Spinner)getView().findViewById(R.id.changeSchool);
         School.setEnabled(false);
-        listOfSchools.add("-- Select school --");
+        if (!listOfSchools.contains("-- Select school --")) {
+            listOfSchools.add("-- Select school --");
+        }
         School.setSelection(0);
 
         Child = (Spinner)getView().findViewById(R.id.myChild);
-        listOfStudents.add("--Select child--");
+        if (!listOfStudents.contains("--Select child--")) {
+            listOfStudents.add("--Select child--");
+        }
         Child.setSelection(0);
     }
 
@@ -256,8 +260,10 @@ public class AddParentFragment extends Fragment implements AdapterView.OnItemSel
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 School school = dataSnapshot.getValue(School.class);
-                schoolList.add(school);
-                listOfSchools.add(school.getSchoolName());
+                if (!listOfSchools.contains(school.getSchoolName())) {
+                    schoolList.add(school);
+                    listOfSchools.add(school.getSchoolName());
+                }
 
                 if (dataSnapshot.getKey().equals(SCHOOL_ID)){
                     int size = schoolList.size();
@@ -308,7 +314,7 @@ public class AddParentFragment extends Fragment implements AdapterView.OnItemSel
                 if (dataSnapshot.exists()) {
                     for (DataSnapshot snap: dataSnapshot.getChildren()) {
                         User student = snap.getValue(User.class);
-                        if (student.getSchoolId().equals(school_id)) {
+                        if (student.getSchoolId().equals(school_id) && !listOfStudents.contains(student.getLastName() + ", " + student.getFirstName() + " (" + student.getYear() + " - " + student.getSection() + ")")) {
                             childList.add(student);
                             listOfStudents.add(student.getLastName() + ", " + student.getFirstName() + " (" + student.getYear() + " - " + student.getSection() + ")");
                         }

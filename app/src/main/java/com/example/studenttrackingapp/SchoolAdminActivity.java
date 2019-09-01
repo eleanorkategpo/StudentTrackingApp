@@ -32,6 +32,7 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class SchoolAdminActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener, StudentAdapter.OnRequestListener {
@@ -67,7 +68,9 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
 
         allSchools = (Spinner)findViewById(R.id.changeSchool);
         allSchools.setEnabled(false);
-        listOfSchools.add("-- Select school --");
+        if (!listOfSchools.contains("-- Select school --")) {
+            listOfSchools.add("-- Select school --");
+        }
         allSchools.setSelection(0);
 
         StudentList = (RecyclerView)findViewById(R.id.studentList);
@@ -123,9 +126,10 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 School school = dataSnapshot.getValue(School.class);
-                schoolList.add(school);
-                listOfSchools.add(school.getSchoolName());
-
+                if (!listOfSchools.contains(school.getSchoolName())) {
+                    schoolList.add(school);
+                    listOfSchools.add(school.getSchoolName());
+                }
                 if (dataSnapshot.getKey().equals(SCHOOL_ID)){
                     int size = schoolList.size();
                     allSchools.setSelection(size);

@@ -79,7 +79,9 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
         Address = (EditText)getView().findViewById(R.id.address);
         School = (Spinner)getView().findViewById(R.id.changeSchool);
         School.setEnabled(false);
-        listOfSchools.add("-- Select school --");
+        if (!listOfSchools.contains("-- Select school --")) {
+            listOfSchools.add("-- Select school --");
+        }
         School.setSelection(0);
 
         progressDialog = new ProgressDialog(this.getContext());
@@ -247,8 +249,11 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 School school = dataSnapshot.getValue(School.class);
-                schoolList.add(school);
-                listOfSchools.add(school.getSchoolName());
+
+                if (!listOfSchools.contains(school.getSchoolName())) {
+                    schoolList.add(school);
+                    listOfSchools.add(school.getSchoolName());
+                }
 
                 if (dataSnapshot.getKey().equals(SCHOOL_ID)){
                     int size = schoolList.size();

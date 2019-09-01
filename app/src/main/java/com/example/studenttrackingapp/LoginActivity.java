@@ -22,13 +22,17 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 public class LoginActivity extends AppCompatActivity {
 
     private EditText Username, Password;
     private Button Login;
     private ProgressDialog progressDialog;
-
     private FirebaseAuth firebaseAuth;
     private FirebaseUser user;
 
@@ -54,7 +58,7 @@ public class LoginActivity extends AppCompatActivity {
         firebaseAuth = FirebaseAuth.getInstance();
         progressDialog = new ProgressDialog(this);
 
-       /* user = firebaseAuth.getCurrentUser();
+        /*user = firebaseAuth.getCurrentUser();
         if (user != null) {
             finish();
             //add condition based on usertype
@@ -74,26 +78,50 @@ public class LoginActivity extends AppCompatActivity {
                 @Override
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     if (task.isSuccessful()){
-                        progressDialog.dismiss();
+
+                        user = task.getResult().getUser();
+                        getUserType(user.getUid());
                         Toast.makeText(LoginActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
-                        getUserType();
                     }
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
                     Toast.makeText(LoginActivity.this,  e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-                    progressDialog.dismiss();
+                      progressDialog.dismiss();
                 }
             });
         }
     }
 
-    private void getUserType() {
+    private void getUserType(String user_id) {
         //String user_id = user.getUid();
+        Query currentUser = FirebaseDatabase.getInstance().getReference("Users").child(user_id);
 
-        //School Activity
-        Intent intent = new Intent(LoginActivity.this, SchoolAdminActivity.class);
-        startActivity(intent);
+        currentUser.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    User loginUser = dataSnapshot.getValue(User.class);
+                    if (loginUser.getUserType() == 1 ) { //admin
+                        Intent intent = new Intent(LoginActivity.this, SchoolAdminActivity.class);
+                        startActivity(intent);
+                    } else if (loginUser.getUserType() == 2) { //parent
+                        Intent intent = new Intent(LoginActivity.this, ParentActivity.class);
+                        startActivity(intent);
+                    } else { //student
+                        Intent intent = new Intent(LoginActivity.this, StudentActivity.class);
+                        startActivity(intent);
+                    }
+
+                    progressDialog.dismiss();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 }

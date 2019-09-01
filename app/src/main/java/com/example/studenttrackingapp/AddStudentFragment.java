@@ -84,16 +84,22 @@ public class AddStudentFragment extends Fragment implements AdapterView.OnItemSe
 
         School = (Spinner)getView().findViewById(R.id.changeSchool);
         School.setEnabled(false);
-        listOfSchools.add("-- Select school --");
+        if (!listOfSchools.contains("-- Select school --")) {
+            listOfSchools.add("-- Select school --");
+        }
         School.setSelection(0);
 
         Year = (Spinner)getView().findViewById(R.id.year);
-        listOfYear.add("-- Select year --");
+        if (!listOfYear.contains("-- Select year --")) {
+            listOfYear.add("-- Select year --");
+        }
         Year.setSelection(0);
         Year.setVisibility(View.INVISIBLE);
 
         Section = (Spinner)getView().findViewById(R.id.section);
-        listOfSection.add("-- Select section --");
+        if (!listOfSection.contains("-- Select section --")) {
+            listOfSection.add("-- Select section --");
+        }
         Section.setSelection(0);
         Section.setVisibility(View.INVISIBLE);
     }
@@ -256,8 +262,10 @@ public class AddStudentFragment extends Fragment implements AdapterView.OnItemSe
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 School school = dataSnapshot.getValue(School.class);
-                schoolList.add(school);
-                listOfSchools.add(school.getSchoolName());
+                if (!listOfSchools.contains(school.getSchoolName())) {
+                    schoolList.add(school);
+                    listOfSchools.add(school.getSchoolName());
+                }
 
                 if (dataSnapshot.getKey().equals(SCHOOL_ID)){
                     int size = schoolList.size();
@@ -305,10 +313,10 @@ public class AddStudentFragment extends Fragment implements AdapterView.OnItemSe
                 if (dataSnapshot.exists()) {
                     for (DataSnapshot snap: dataSnapshot.getChildren()) {
                         YearSection ys = snap.getValue(YearSection.class);
-                        yearSections.add(ys);
 
-                        if (ys.getSectionId().isEmpty()) {
+                        if (ys.getSectionId().isEmpty() && !listOfYear.contains(ys.getYearDesc())) {
                             listOfYear.add(ys.getYearDesc());
+                            yearSections.add(ys);
                         }
                     }
                     setupYear();

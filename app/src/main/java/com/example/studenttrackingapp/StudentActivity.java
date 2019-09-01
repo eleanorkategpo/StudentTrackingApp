@@ -1,14 +1,16 @@
 package com.example.studenttrackingapp;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -22,15 +24,28 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
@@ -41,39 +56,60 @@ import java.util.Locale;
 
 public class StudentActivity extends AppCompatActivity implements OnMapReadyCallback {
 
+    private boolean USER_LOGGED_IN = true;
     private double latitude, longitude;
     private User user;
-    private String schoolId;
-
+    private String schoolId, USER_ID;
     private EditText MyLocation;
     private Button SendLocation;
+    private CheckBox inSchool, notInSchool;
     private GoogleMap mMap;
-
     private FirebaseAuth firebaseAuth;
-
+    private FirebaseUser currentUser;
     private LocationManager locationManager;
     private LocationListener locationListener;
+    private ProgressDialog progressDialog;
+    private Marker myMarker;
+    private Circle radius;
+    private boolean isInSchool;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_student);
         setupUIViews();
         initLayout();
-        getStrings();
     }
 
     private void setupUIViews() {
+        isInSchool = false;
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("Loading maps...");
+        progressDialog.show();
+
         MyLocation = (EditText)findViewById(R.id.currentAddress);
+        MyLocation.setEnabled(false);
         SendLocation = (Button)findViewById(R.id.sendLocation);
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.mapView);
+        mapFragment.getMapAsync(this);
+
+        firebaseAuth = FirebaseAuth.getInstance();
+        currentUser = firebaseAuth.getCurrentUser();
+
+        inSchool = (CheckBox)findViewById(R.id.inSchool);
+        notInSchool = (CheckBox)findViewById(R.id.notSchool);
+
+        USER_ID = firebaseAuth.getUid();
     }
 
     private void initLayout() {
         SendLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                sendLocation();
+                sendLocation(true);
             }
         });
 
@@ -81,7 +117,9 @@ public class StudentActivity extends AppCompatActivity implements OnMapReadyCall
 
             @Override
             public void onLocationChanged(Location location) {
-                requestLocation();
+                if (USER_LOGGED_IN) {
+                    requestLocation();
+                }
             }
 
             @Override
@@ -102,10 +140,6 @@ public class StudentActivity extends AppCompatActivity implements OnMapReadyCall
         };
     }
 
-    private void getStrings() {
-        getUserDetails();
-    }
-
     private void requestLocation() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -123,15 +157,145 @@ public class StudentActivity extends AppCompatActivity implements OnMapReadyCall
 
                 if (location != null && locationListener != null) {
                     String formattedAddress = getFormattedAddress(location.getLongitude(), location.getLatitude());
+                    MyLocation.setText(formattedAddress);
+
                     latitude = location.getLatitude();
                     longitude = location.getLongitude();
-                    MyLocation.setText(formattedAddress);
+
+                    LatLng myLocation = new LatLng(latitude, longitude);
+                    MarkerOptions myLocationMarker = new MarkerOptions().position(myLocation).title("My Current Location");
+
+                    if (myMarker != null) {
+                        myMarker.remove();
+                    }
+
+                    myMarker = mMap.addMarker(myLocationMarker);
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(myLocation));
+                    mMap.animateCamera(CameraUpdateFactory.zoomTo(19));
+
+                    float[] distance = new float[2];
+
+                    if (radius != null) {
+                        Location.distanceBetween(myMarker.getPosition().latitude, myMarker.getPosition().longitude,
+                                radius.getCenter().latitude, radius.getCenter().longitude, distance);
+
+                        if( distance[0] > radius.getRadius()  ){
+                            //Toast.makeText(getBaseContext(), "Not In School", Toast.LENGTH_SHORT).show();
+                            notInSchool.setChecked(true);
+                            inSchool.setChecked(false);
+                            isInSchool = false;
+                        } else {
+                            //Toast.makeText(getBaseContext(), "In School", Toast.LENGTH_SHORT).show();
+                            inSchool.setChecked(true);
+                            notInSchool.setChecked(false);
+                            isInSchool = true;
+                        }
+                    }
+
+                    sendLocation(false);
                 }
                 else {
                     Toast.makeText(StudentActivity.this, "Something went wrong while getting location. Check your GPS and try again.", Toast.LENGTH_LONG);
                 }
             }
         }
+    }
+
+    private void sendLocation(boolean isActual) { //true if send button was clicked
+        if (isActual) {
+            //send push notifications to parents and school admins
+            //get parent
+            //get admins with school id
+            //send
+
+        } else {
+            Query currentUser = FirebaseDatabase.getInstance().getReference("StudentLocations").child(USER_ID);
+            currentUser.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.exists()) {
+                        StudentLocation loc = dataSnapshot.getValue(StudentLocation.class);
+                        loc.setLatitude(latitude);
+                        loc.setLongitude(longitude);
+                        loc.setInSchool(isInSchool);
+
+                        DatabaseReference dR = FirebaseDatabase.getInstance().getReference("StudentLocations").child(USER_ID);
+                        dR.setValue(loc);
+                    } else { //add new
+                        StudentLocation sl = new StudentLocation(USER_ID, latitude, longitude, isInSchool);
+                        FirebaseDatabase.getInstance().getReference("StudentLocations")
+                                .child(USER_ID)
+                                .setValue(sl)
+                                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<Void> task) {
+                                        if (task.isSuccessful()) {
+
+                                        }
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(StudentActivity.this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                                progressDialog.dismiss();
+                            }
+                        });
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+        }
+    }
+
+    private void getUserDetails() {
+        Query currentUser = FirebaseDatabase.getInstance().getReference("Users").child(USER_ID);
+
+        currentUser.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    user = dataSnapshot.getValue(User.class);
+                    schoolId = user.getSchoolId();
+
+                    Query userSchool = FirebaseDatabase.getInstance().getReference("Schools").child(schoolId);
+                    userSchool.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.exists()) {
+                                School userSchool = dataSnapshot.getValue(School.class);
+
+                                LatLng myLocation = new LatLng(Double.parseDouble(userSchool.getSchoolLat()), Double.parseDouble(userSchool.getSchoolLong()));
+                                MarkerOptions marker = new MarkerOptions().position(myLocation).title("My School");
+                                marker.icon(BitmapDescriptorFactory.fromResource(R.drawable.school_marker));
+                                mMap.addMarker(marker);
+                                //mMap.moveCamera(CameraUpdateFactory.newLatLng(myLocation));
+                                radius = mMap.addCircle(new CircleOptions()
+                                        .center(myLocation)
+                                        .radius(80)
+                                        .strokeColor(Color.parseColor("#227B1FA2"))
+                                        .fillColor(Color.parseColor("#229C27B0")));
+
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
+
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private String getFormattedAddress(double longitude, double latitude) {
@@ -147,43 +311,10 @@ public class StudentActivity extends AppCompatActivity implements OnMapReadyCall
         return address;
     }
 
-    private void sendLocation() { //send push notifications to parents and school admins
-        //get parent
-        //get admins with school id
-
-
-        //continue here
-    }
-
-    private String getUserDetails() {
-        Query currentUser = FirebaseDatabase.getInstance().getReference("Users")
-                .orderByChild("user_id")
-                .equalTo(firebaseAuth.getUid());
-
-        currentUser.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    for (DataSnapshot snap : dataSnapshot.getChildren()) {
-                        user = snap.getValue(User.class);
-                        schoolId = user.getSchoolId();
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-
-        return null;
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_school_admin,menu);
+        inflater.inflate(R.menu.menu_student,menu);
         return true;
     }
 
@@ -203,6 +334,7 @@ public class StudentActivity extends AppCompatActivity implements OnMapReadyCall
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 firebaseAuth.signOut();
+                                USER_LOGGED_IN = false;
                                 Toast.makeText(StudentActivity.this, "Logged out successfully...", Toast.LENGTH_SHORT).show();
                                 startActivity(new Intent(StudentActivity.this, LoginActivity.class));
                                 finish();
@@ -227,5 +359,33 @@ public class StudentActivity extends AppCompatActivity implements OnMapReadyCall
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        requestLocation();
+        getUserDetails();
+        progressDialog.dismiss();
     }
+
+    public void onBackPressed() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Do you want to logout and stop sending updates on your location?")
+                .setCancelable(false)
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        firebaseAuth.signOut();
+                        USER_LOGGED_IN = false;
+                        StudentActivity.super.onBackPressed();
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.cancel();
+                    }
+                });
+
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+
 }
