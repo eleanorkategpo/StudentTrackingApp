@@ -316,8 +316,9 @@ public class AddStudentFragment extends Fragment implements AdapterView.OnItemSe
 
                         if (ys.getSectionId().isEmpty() && !listOfYear.contains(ys.getYearDesc())) {
                             listOfYear.add(ys.getYearDesc());
-                            yearSections.add(ys);
                         }
+
+                        yearSections.add(ys);
                     }
                     setupYear();
                 }
@@ -345,6 +346,8 @@ public class AddStudentFragment extends Fragment implements AdapterView.OnItemSe
         progressDialog.setMessage("Loading sections...");
         progressDialog.setCancelable(false);
         progressDialog.show();
+
+        listOfSection.clear();
 
         for (YearSection a: yearSections){
             if (a.getYearDesc().equals(id) && !(a.getSectionId().isEmpty())) {

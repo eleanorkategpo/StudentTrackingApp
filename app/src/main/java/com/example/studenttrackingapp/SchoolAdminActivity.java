@@ -173,36 +173,6 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
                 .orderByChild("schoolId")
                 .equalTo(SCHOOL_ID);
 
-        /* currentUser.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                User user = dataSnapshot.getValue(User.class);
-                if (user.getUserType() == 3) {
-                    studentList.add(user);
-                }
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });*/
-
         currentUser.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -248,6 +218,12 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.editProfile:
+                if (firebaseUser.getEmail().equals("admin@studenttracking.com")) {
+                    Toast.makeText(SchoolAdminActivity.this, "Account is superadmin...", Toast.LENGTH_SHORT).show();
+                } else {
+                    Intent intent = new Intent(SchoolAdminActivity.this, EditProfile.class);
+                    startActivity(intent);
+                }
                 break;
             case R.id.viewAdmins:
                 break;
@@ -310,7 +286,6 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
 
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-
         if(i != 0) {
             School school = schoolList.get(i - 1);
             SCHOOL_ID = school.getSchoolId();
@@ -328,9 +303,17 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
 
     @Override
     public void onRequestClick(int position) {
-        /*FirstAidRequest request = requestList.get(position);
+       /*FirstAidRequest request = requestList.get(position);
         Intent intent = new Intent(RecipientRequests.this, RecipientSuccessActivity.class);
         intent.putExtra("REQUEST_ID", request.getId());
         startActivity(intent);*/
+        progressDialog.setMessage("Please wait..");
+        progressDialog.show();
+        User u = studentList.get(position);
+        Intent intent = new Intent(SchoolAdminActivity.this, StudentActivity.class);
+        intent.putExtra("USER_ID", u.getUserId());
+        intent.putExtra("SCHOOL_ADMIN", "true");
+        startActivity(intent);
+        progressDialog.dismiss();
     }
 }

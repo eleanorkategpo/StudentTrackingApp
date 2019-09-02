@@ -13,7 +13,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".EditProfile"></activity>
+        <activity android:name=".SendEmail"></activity>
+        <activity android:name=".EditProfile" />
         <activity android:name=".StudentActivity" />
         <activity android:name=".ParentActivity" />
         <activity android:name=".AddressActivity" />

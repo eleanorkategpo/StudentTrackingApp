@@ -59,7 +59,7 @@ public class StudentActivity extends AppCompatActivity implements OnMapReadyCall
     private boolean USER_LOGGED_IN = true;
     private double latitude, longitude;
     private User user;
-    private String schoolId, USER_ID;
+    private String schoolId, USER_ID, isSchoolAdmin;
     private EditText MyLocation;
     private Button SendLocation;
     private CheckBox inSchool, notInSchool;
@@ -100,9 +100,17 @@ public class StudentActivity extends AppCompatActivity implements OnMapReadyCall
         currentUser = firebaseAuth.getCurrentUser();
 
         inSchool = (CheckBox)findViewById(R.id.inSchool);
+        inSchool.setClickable(false);
         notInSchool = (CheckBox)findViewById(R.id.notSchool);
+        notInSchool.setClickable(false);
 
-        USER_ID = firebaseAuth.getUid();
+        //USER_ID = firebaseAuth.getUid();
+        USER_ID = getIntent().getStringExtra("USER_ID");
+        isSchoolAdmin = getIntent().getStringExtra("SCHOOL_ADMIN");
+
+        if (isSchoolAdmin.equals("true")) {
+            SendLocation.setVisibility(View.GONE);
+        }
     }
 
     private void initLayout() {
@@ -183,6 +191,7 @@ public class StudentActivity extends AppCompatActivity implements OnMapReadyCall
                             //Toast.makeText(getBaseContext(), "Not In School", Toast.LENGTH_SHORT).show();
                             notInSchool.setChecked(true);
                             inSchool.setChecked(false);
+
                             isInSchool = false;
                         } else {
                             //Toast.makeText(getBaseContext(), "In School", Toast.LENGTH_SHORT).show();
@@ -203,11 +212,59 @@ public class StudentActivity extends AppCompatActivity implements OnMapReadyCall
 
     private void sendLocation(boolean isActual) { //true if send button was clicked
         if (isActual) {
-            //send push notifications to parents and school admins
-            //get parent
-            //get admins with school id
-            //send
+            progressDialog.setMessage("Please wait...");
+            progressDialog.show();
 
+            final String[] emailList = {""};
+            Query schoolAdmins = FirebaseDatabase.getInstance().getReference("Users")
+                    .orderByChild("schoolId")
+                    .equalTo(schoolId);
+
+            schoolAdmins.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.exists()) {
+                        for (DataSnapshot snap : dataSnapshot.getChildren()) {
+                            User a = snap.getValue(User.class);
+                            if (a.isSchoolAdmin && a.getEmail() != null) {
+                                emailList[0] += a.getEmail() + ",";
+                            }
+                        }
+                        Intent i = new Intent(StudentActivity.this, SendEmail.class );
+                        i.putExtra("EMAIL_LIST", emailList[0]);
+                        startActivity(i);
+                        progressDialog.dismiss();
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+
+            Query parent = FirebaseDatabase.getInstance().getReference("Users")
+                    .orderByChild("childId")
+                    .equalTo(USER_ID);
+
+            parent.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.exists()) {
+                        for (DataSnapshot snap : dataSnapshot.getChildren()) {
+                            User p = snap.getValue(User.class);
+                            if (p.getEmail() != null) {
+                                emailList[0] = p.getEmail() + ",";
+                            }
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
         } else {
             Query currentUser = FirebaseDatabase.getInstance().getReference("StudentLocations").child(USER_ID);
             currentUser.addListenerForSingleValueEvent(new ValueEventListener() {

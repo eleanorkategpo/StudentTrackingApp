@@ -48,6 +48,8 @@ public class AddParentFragment extends Fragment implements AdapterView.OnItemSel
     private ArrayList<String> listOfSchools = new ArrayList<>();
     private ArrayList<User> childList  = new ArrayList<>();
     private ArrayList<String> listOfStudents  = new ArrayList<>();
+    private ArrayList<String> listOfYear = new ArrayList<>();
+    private ArrayList<String> listOfSection = new ArrayList<>();
     private ArrayAdapter<String> adapter, adapterChild;
 
     @Override

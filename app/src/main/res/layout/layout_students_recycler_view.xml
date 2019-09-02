@@ -38,12 +38,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="School Here"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textStyle="italic"
-                android:text="(Year - Section)"/>
             <TextView
                 android:id="@+id/yearAndSection"
                 android:layout_width="wrap_content"

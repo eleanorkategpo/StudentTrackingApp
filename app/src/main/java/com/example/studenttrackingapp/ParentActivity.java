@@ -71,7 +71,9 @@ public class ParentActivity extends AppCompatActivity implements OnMapReadyCallb
         myChild = (EditText) findViewById(R.id.myChild);
         myChild.setEnabled(false);
         inSchool = (CheckBox) findViewById(R.id.inSchool);
+        inSchool.setClickable(false);
         notSchool = (CheckBox) findViewById(R.id.notSchool);
+        notSchool.setClickable(false);
         currentAddress = (TextView) findViewById(R.id.childAddress);
         fab = (FloatingActionButton) findViewById(R.id.fab);
         firebaseAuth = FirebaseAuth.getInstance();

@@ -111,6 +111,8 @@ public class LoginActivity extends AppCompatActivity {
                         startActivity(intent);
                     } else { //student
                         Intent intent = new Intent(LoginActivity.this, StudentActivity.class);
+                        intent.putExtra("USER_ID", user_id);
+                        intent.putExtra("SCHOOL_ADMIN", "false");
                         startActivity(intent);
                     }
 
