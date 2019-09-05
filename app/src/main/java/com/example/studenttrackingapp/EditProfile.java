@@ -18,6 +18,8 @@ import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -34,7 +36,7 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
     private FirebaseAuth firebaseAuth;
     private FirebaseUser firebaseUser;
 
-    private String USER_ID, SCHOOL_ID, year, section, NEW_CHILD_ID;
+    private String USER_ID, SCHOOL_ID, YEAR, SECTION, CHILD_ID;
 
     private Spinner School, Child;
     private EditText FName, LName, Birthday, Email, Password, Address, PhoneNumber;
@@ -96,13 +98,12 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
 
         progressDialog = new ProgressDialog(this);
 
-        School = (Spinner)findViewById(R.id.changeSchool);
+        School = (Spinner) findViewById(R.id.changeSchool);
         School.setEnabled(false);
-        if (!listOfSchools.contains("-- Select school --")) {
-            listOfSchools.add("-- Select school --");
+
+        if (user_type == 2) {
+            School.setVisibility(View.GONE);
         }
-        School.setSelection(0);
-        SCHOOL_ID = getSchools();
 
         FName = (EditText)findViewById(R.id.fname);
         LName = (EditText)findViewById(R.id.lname);
@@ -120,41 +121,43 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
         SaveBtn = (Button)findViewById(R.id.addBtn);
         SaveBtn.setText("Save");
 
+        getDetails();
+
         if (user_type == 2) {//parent
             Child = (Spinner)findViewById(R.id.myChild);
-            if (!listOfStudents.contains("--Select child--")) {
-                listOfStudents.add("--Select child--");
-            }
-            Child.setSelection(0);
-            getChild();
-
+            Child.setEnabled(false);
         } else if (user_type == 3){ // student
             Year = (Spinner)findViewById(R.id.year);
             if (!listOfYear.contains("-- Select year --")) {
                 listOfYear.add("-- Select year --");
             }
             Year.setSelection(0);
-            Year.setVisibility(View.INVISIBLE);
+            Year.setVisibility(View.VISIBLE);
 
             Section = (Spinner)findViewById(R.id.section);
-            if (!listOfSection.contains("-- Select section --")) {
-                listOfSection.add("-- Select section --");
-            }
-            Section.setSelection(0);
-            Section.setVisibility(View.INVISIBLE);
-
-            getYears();
+            Section.setVisibility(View.VISIBLE);
         }
-
-        getDetails();
     }
 
     private void initLayout() {
         SaveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (Password.getText() != null) { //update password
-                    //continue here
+                if (!Password.getText().toString().equals("")) { //update password
+                    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                    if (user != null){
+                        user.updatePassword(Password.getText().toString())
+                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()){
+                                        Toast.makeText(EditProfile.this, "Password updated successfully.", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        Toast.makeText(EditProfile.this, "Something went wrong while updating the password.", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            });
+                    }
                 }
 
                 Query profile = FirebaseDatabase.getInstance().getReference("Users").child(USER_ID);
@@ -163,6 +166,7 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
                             User myProfile = dataSnapshot.getValue(User.class);
+
                             myProfile.setFirstName(FName.getText().toString().trim());
                             myProfile.setLastName(LName.getText().toString().trim());
                             myProfile.setGender((Female.isChecked()) ? "Female" : "Male");
@@ -170,11 +174,13 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
                             myProfile.setAddress(Address.getText().toString().trim());
                             myProfile.setPhoneNumber(PhoneNumber.getText().toString().trim());
 
-                            if (USER_TYPE == 2) { //parent
-                                myProfile.setChildId(NEW_CHILD_ID);
-                            } else if (USER_TYPE == 3) { //student
-                                myProfile.setYear(year);
-                                myProfile.setSection(section);
+                            if (USER_TYPE == 3) { //student
+                                if (YEAR != null) {
+                                    myProfile.setYear(YEAR);
+                                }
+                                if (SECTION != null) {
+                                    myProfile.setSection(SECTION);
+                                }
                             }
 
                             DatabaseReference dR = FirebaseDatabase.getInstance().getReference("Users").child(USER_ID);
@@ -209,7 +215,7 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
         });
     }
 
-    private String getSchools(){
+    private void getSchools(){
         progressDialog.setMessage("Loading data..");
         progressDialog.setCancelable(false);
         progressDialog.show();
@@ -217,34 +223,15 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
         listOfSchools.clear();
         schoolList.clear();
 
-        final String[] school_id = new String[1];
-        Query currentUser = FirebaseDatabase.getInstance().getReference("Users").child(USER_ID);
-        currentUser.addListenerForSingleValueEvent(new ValueEventListener() {
+        Query mySchool = FirebaseDatabase.getInstance().getReference("Schools").child(SCHOOL_ID);
+        mySchool.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    User user = dataSnapshot.getValue(User.class);
-                    school_id[0] = user.getSchoolId();
-
-                    Query mySchool = FirebaseDatabase.getInstance().getReference("Schools").child(user.getSchoolId());
-                    mySchool.addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot ds) {
-                            if (ds.exists()) {
-                                School sc = ds.getValue(School.class);
-                                schoolList.add(sc);
-                                listOfSchools.add(sc.getSchoolName());
-                                setupSpinner("school");
-                            }
-
-                            progressDialog.dismiss();
-                        }
-
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                        }
-                    });
+            public void onDataChange(@NonNull DataSnapshot ds) {
+                if (ds.exists()) {
+                    School sc = ds.getValue(School.class);
+                    schoolList.add(sc);
+                    listOfSchools.add(sc.getSchoolName());
+                    setupSpinner("school");
                 }
 
                 progressDialog.dismiss();
@@ -255,7 +242,6 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
 
             }
         });
-        return school_id[0];
     }
 
     private void getChild(){
@@ -263,20 +249,17 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
         progressDialog.setCancelable(false);
         progressDialog.show();
 
-        Query students = FirebaseDatabase.getInstance().getReference("Users")
-                .orderByChild("userType")
-                .equalTo(3);
+        Query students = FirebaseDatabase.getInstance().getReference("Users").child(CHILD_ID);
         students.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    for (DataSnapshot snap: dataSnapshot.getChildren()) {
-                        User student = snap.getValue(User.class);
-                        if (student.getSchoolId().equals(SCHOOL_ID) && !listOfStudents.contains(student.getLastName() + ", " + student.getFirstName() + " (" + student.getYear() + " - " + student.getSection() + ")")) {
-                            childList.add(student);
-                            listOfStudents.add(student.getLastName() + ", " + student.getFirstName() + " (" + student.getYear() + " - " + student.getSection() + ")");
-                        }
+                    User student = dataSnapshot.getValue(User.class);
+                    if (!listOfStudents.contains(student.getLastName() + ", " + student.getFirstName() + " (" + student.getYear() + " - " + student.getSection() + ")")) {
+                        childList.add(student);
+                        listOfStudents.add(student.getLastName() + ", " + student.getFirstName() + " (" + student.getYear() + " - " + student.getSection() + ")");
                     }
+                    setupSpinner("child");
                     progressDialog.dismiss();
                 }
             }
@@ -286,11 +269,6 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
 
             }
         });
-
-        adapterChild = new ArrayAdapter<String>(EditProfile.this, android.R.layout.simple_spinner_item, listOfStudents);
-        adapterChild.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        Child.setAdapter(adapterChild);
-        Child.setOnItemSelectedListener(this);
     }
 
     private void getYears() {
@@ -311,8 +289,9 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
 
                         yearSections.add(ys);
                     }
-                    setupSpinner("year");
                 }
+
+                setupSpinner("year");
             }
 
             @Override
@@ -339,6 +318,13 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
         adapterSection.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         Section.setAdapter(adapterSection);
         Section.setOnItemSelectedListener(this);
+
+        for (int i = 0; i < listOfSection.size(); i++) {
+            if (listOfSection.get(i).equals(SECTION)) {
+                Section.setSelection(i);
+            }
+        }
+
         Section.setVisibility(View.VISIBLE);
         progressDialog.dismiss();
     }
@@ -351,11 +337,16 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     User user = dataSnapshot.getValue(User.class);
+
+                    SCHOOL_ID = user.getSchoolId();
+                    CHILD_ID = user.getChildId();
+                    YEAR = user.getYear();
+                    SECTION = user.getSection();
+
                     FName.setText(user.getFirstName());
                     LName.setText(user.getLastName());
                     Birthday.setText(user.getBirthday());
                     Email.setText(user.getEmail());
-                    //password
                     Address.setText(user.getAddress());
                     PhoneNumber.setText(user.getPhoneNumber());
                     if (user.getGender().equals("Female")) {
@@ -364,13 +355,25 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
                         Male.setChecked(true);
                     }
 
+                    if (USER_TYPE != 2) {
+                        getSchools();
+                    }
+
+                    if (USER_TYPE == 2) {
+                        getChild();
+                    }
+
+                    if (USER_TYPE == 3) {
+                        getYears();
+                    }
+
                     progressDialog.dismiss();
-
-
                 } else {
                     Toast.makeText(EditProfile.this, "User not found", Toast.LENGTH_SHORT).show();
                     progressDialog.dismiss();
                 }
+
+
             }
 
             @Override
@@ -393,9 +396,21 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
             Year.setAdapter(adapterYear);
             Year.setOnItemSelectedListener(this);
 
+            for (int i = 0; i < listOfYear.size(); i++) {
+                if (listOfYear.get(i).equals(YEAR)) {
+                    Year.setSelection(i);
+                }
+            }
+
             Year.setVisibility(View.VISIBLE);
             Section.setVisibility(View.VISIBLE);
             Section.setEnabled(false);
+        } else if (s.equals("child")) {
+            adapterChild = new ArrayAdapter<String>(EditProfile.this, android.R.layout.simple_spinner_item, listOfStudents);
+            adapterChild.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            Child.setAdapter(adapterChild);
+            Child.setOnItemSelectedListener(this);
+            Child.setSelection(0);
         }
     }
 
@@ -426,37 +441,21 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
         switch (id)
         {
             case R.id.changeSchool:
-                if (i != 0) { // not --select type--
-                    School school = schoolList.get(i - 1);
-                    SCHOOL_ID = school.getSchoolId();
-                } else {
-                    SCHOOL_ID = "";
-                }
+                School school = schoolList.get(i);
+                SCHOOL_ID = school.getSchoolId();
                 break;
             case R.id.year:
-                if (i != 0) {
-                    year = listOfYear.get(i);
-                    getSections(year);
-                    Section.setEnabled(true);
-                } else {
-                    year = "";
-                }
+                YEAR = listOfYear.get(i);
+                getSections(YEAR);
+                Section.setEnabled(true);
                 break;
             case R.id.section:
-                    if (i != 0) {
-                        section = listOfSection.get(i);
-                    } else {
-                    section = "";
-                }
+                SECTION = listOfSection.get(i);
                 break;
-            case R.id.myChild:
-                if (i != 0) {
-                    User myChild = childList.get(i - 1);
-                    NEW_CHILD_ID =  myChild.getUserId();
-                } else {
-                    NEW_CHILD_ID = "";
-                }
-                break;
+            /*case R.id.myChild:
+                    User myChild = childList.get(i);
+                    NEW_CHILD_ID = myChild.getUserId();
+                break;*/
 
         }
     }

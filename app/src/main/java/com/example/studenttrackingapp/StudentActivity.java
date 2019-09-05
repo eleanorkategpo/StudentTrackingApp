@@ -59,7 +59,7 @@ public class StudentActivity extends AppCompatActivity implements OnMapReadyCall
     private boolean USER_LOGGED_IN = true;
     private double latitude, longitude;
     private User user;
-    private String schoolId, USER_ID, isSchoolAdmin;
+    private String schoolId, USER_ID;
     private EditText MyLocation;
     private Button SendLocation;
     private CheckBox inSchool, notInSchool;
@@ -104,13 +104,8 @@ public class StudentActivity extends AppCompatActivity implements OnMapReadyCall
         notInSchool = (CheckBox)findViewById(R.id.notSchool);
         notInSchool.setClickable(false);
 
-        //USER_ID = firebaseAuth.getUid();
-        USER_ID = getIntent().getStringExtra("USER_ID");
-        isSchoolAdmin = getIntent().getStringExtra("SCHOOL_ADMIN");
-
-        if (isSchoolAdmin.equals("true")) {
-            SendLocation.setVisibility(View.GONE);
-        }
+        USER_ID = firebaseAuth.getUid();
+        //USER_ID = getIntent().getStringExtra("USER_ID");
     }
 
     private void initLayout() {
@@ -232,6 +227,7 @@ public class StudentActivity extends AppCompatActivity implements OnMapReadyCall
                         }
                         Intent i = new Intent(StudentActivity.this, SendEmail.class );
                         i.putExtra("EMAIL_LIST", emailList[0]);
+                        i.putExtra("IS_ADMIN", "false");
                         startActivity(i);
                         progressDialog.dismiss();
                     }

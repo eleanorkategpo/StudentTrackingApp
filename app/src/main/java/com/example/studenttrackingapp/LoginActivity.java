@@ -12,6 +12,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -39,6 +41,12 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        requestWindowFeature(Window.FEATURE_NO_TITLE); //will hide the title
+        getSupportActionBar().hide(); // hide the title bar
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN); //enable full screen
+
         setContentView(R.layout.activity_login);
         setupUIViews();
 
@@ -108,10 +116,12 @@ public class LoginActivity extends AppCompatActivity {
                         startActivity(intent);
                     } else if (loginUser.getUserType() == 2) { //parent
                         Intent intent = new Intent(LoginActivity.this, ParentActivity.class);
+                        intent.putExtra("USER_ID", user_id);
+                        intent.putExtra("SCHOOL_ADMIN", "false");
                         startActivity(intent);
                     } else { //student
                         Intent intent = new Intent(LoginActivity.this, StudentActivity.class);
-                        intent.putExtra("USER_ID", user_id);
+                        /*intent.putExtra("USER_ID", user_id);*/
                         intent.putExtra("SCHOOL_ADMIN", "false");
                         startActivity(intent);
                     }

@@ -8,12 +8,13 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_pwc_eye"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/ic_pwc_eye_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".SendEmail"></activity>
+        <activity android:name=".ViewAdmins"/>
+        <activity android:name=".SendEmail" />
         <activity android:name=".EditProfile" />
         <activity android:name=".StudentActivity" />
         <activity android:name=".ParentActivity" />

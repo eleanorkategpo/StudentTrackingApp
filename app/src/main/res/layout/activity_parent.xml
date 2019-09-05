@@ -44,6 +44,7 @@
                     android:hint="Name of child"/>
             </LinearLayout>
             <TextView
+                android:id="@+id/tvMsg"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Your child currently at:"/>
@@ -71,10 +72,18 @@
                 android:textAlignment="center"
                 android:text="current address sample"
                 />
+            <Button
+                android:id="@+id/contactStudent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone"
+                android:padding="20dp"
+                android:text="Contact Student"/>
         </LinearLayout>
     </ScrollView>
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
+    <!--<androidx.coordinatorlayout.widget.CoordinatorLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
@@ -89,5 +98,5 @@
             android:tint="#FFFFFF"
             app:srcCompat="@drawable/ic_refresh" />
 
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>-->
 </LinearLayout>

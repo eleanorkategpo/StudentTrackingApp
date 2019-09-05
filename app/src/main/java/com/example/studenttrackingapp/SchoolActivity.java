@@ -27,12 +27,14 @@ import com.google.firebase.database.ValueEventListener;
 
 public class SchoolActivity extends AppCompatActivity {
     private String SCHOOL_STATUS, SCHOOL_ID, ADDRESS, LATIDUDE, LONGITUDE;
+    private int USER_TYPE;
     private EditText ID, Name, Address, PhoneNumber, Latitude, Longitude;
     private String id, name, address, phonenumber, latitude, longitude;
     private Button AddEditAddress, Save;
     private DatabaseReference schoolsTable, usersTable;
     private ProgressDialog progressDialog;
     private FirebaseUser firebaseUser;
+    private FirebaseAuth firebaseAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +65,7 @@ public class SchoolActivity extends AppCompatActivity {
         progressDialog = new ProgressDialog(this);
         progressDialog.setCancelable(false);
 
+        firebaseAuth = FirebaseAuth.getInstance();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
         ID.setEnabled(false);
@@ -72,13 +75,16 @@ public class SchoolActivity extends AppCompatActivity {
             getStrings();
             ID.setText(SCHOOL_ID);
         }
+
+        getUser();
     }
 
     private void initLayout(){
         Save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                saveDetails(0);
+                int type = (SCHOOL_STATUS.equals("add")) ? 0 : 2;
+                saveDetails(type);
             }
         });
 
@@ -139,6 +145,25 @@ public class SchoolActivity extends AppCompatActivity {
         });
     }
 
+    private void getUser() {
+        Query currentUser = FirebaseDatabase.getInstance().getReference("Users").child(firebaseAuth.getUid());
+
+        currentUser.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    User user = dataSnapshot.getValue(User.class);
+                    USER_TYPE = user.getUserType();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
     private void saveDetails(int type) { //type = 0: save all, 1: add edit
         id = ID.getText().toString().trim();
         name = Name.getText().toString().trim();
@@ -156,67 +181,97 @@ public class SchoolActivity extends AppCompatActivity {
             progressDialog.dismiss();
         }
         else {
-            schoolsTable = FirebaseDatabase.getInstance().getReference("Schools");
-            String id = schoolsTable.push().getKey();
+            if (type == 0) { //all
+                schoolsTable = FirebaseDatabase.getInstance().getReference("Schools");
+                String id = schoolsTable.push().getKey();
 
-            //String schoolName, String schoolAddress, String schoolPhone, String schoolLat, String schoolLong
-            School school = new School(id, name, address, phonenumber, latitude, longitude);
+                //String schoolName, String schoolAddress, String schoolPhone, String schoolLat, String schoolLong
+                School school = new School(id, name, address, phonenumber, latitude, longitude);
 
-            schoolsTable.child(id).setValue(school).addOnCompleteListener(new OnCompleteListener<Void>() {
-                @Override
-                public void onComplete(@NonNull Task<Void> task) {
-                    if (task.isSuccessful()) {
-                        if (type == 0){
+                schoolsTable.child(id).setValue(school).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            if (type == 0) {
 
-                            Query request = FirebaseDatabase.getInstance().getReference("Users").child(firebaseUser.getUid());
-                            request.addListenerForSingleValueEvent(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
-                                    if (dataSnapshot.exists()) {
-                                        User user = dataSnapshot.getValue(User.class);
-                                        if (SCHOOL_STATUS.equals("add")) {
-                                            user.setSchoolId(id);
-                                        } else {
-                                            user.setSchoolId(SCHOOL_ID);
+                                Query request = FirebaseDatabase.getInstance().getReference("Users").child(firebaseUser.getUid());
+                                request.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        if (dataSnapshot.exists()) {
+                                            User user = dataSnapshot.getValue(User.class);
+                                            if (SCHOOL_STATUS.equals("add")) {
+                                                user.setSchoolId(id);
+                                            } else {
+                                                user.setSchoolId(SCHOOL_ID);
+                                            }
+
+                                            DatabaseReference dR = FirebaseDatabase.getInstance().getReference("Users").child(firebaseUser.getUid());
+                                            dR.setValue(user);
                                         }
-
-                                        DatabaseReference dR = FirebaseDatabase.getInstance().getReference("Users").child(firebaseUser.getUid());
-                                        dR.setValue(user);
                                     }
-                                }
 
-                                @Override
-                                public void onCancelled(@NonNull DatabaseError databaseError) {
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                                }
-                            });
+                                    }
+                                });
 
 
-                            Toast.makeText(SchoolActivity.this, "School " + name + " is successfully added!", Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(SchoolActivity.this, SchoolAdminActivity.class);
-                            startActivity(intent);
+                                Toast.makeText(SchoolActivity.this, "School " + name + " is successfully added!", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(SchoolActivity.this, SchoolAdminActivity.class);
+                                startActivity(intent);
+                                progressDialog.dismiss();
+                            } else if (type == 1) { //type 1: add edit address
+
+                                progressDialog.setMessage("Loading maps...");
+                                progressDialog.show();
+                                Intent intent = new Intent(SchoolActivity.this, AddressActivity.class);
+                                intent.putExtra("SCHOOL_ID", id);
+                                startActivity(intent);
+                                progressDialog.dismiss();
+                            }
                             progressDialog.dismiss();
                         }
-                        else { //type 1: add edit address
 
-                            progressDialog.setMessage("Loading maps...");
-                            progressDialog.show();
-                            Intent intent = new Intent(SchoolActivity.this, AddressActivity.class);
-                            intent.putExtra("SCHOOL_ID", id);
-                            startActivity(intent);
-                            progressDialog.dismiss();
-                        }
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(SchoolActivity.this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                         progressDialog.dismiss();
                     }
+                });
+            }
 
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Toast.makeText(SchoolActivity.this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-                    progressDialog.dismiss();
-                }
-            });
+            if (type == 2) { //edit existing
+                Query school = FirebaseDatabase.getInstance().getReference("Schools").child(SCHOOL_ID);
+
+                school.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            School sc = dataSnapshot.getValue(School.class);
+                            sc.setSchoolName(name);
+                            sc.setSchoolLong(latitude);
+                            sc.setSchoolLong(longitude);
+                            sc.setSchoolAddress(address);
+                            sc.setSchoolPhone(phonenumber);
+
+                            DatabaseReference dR = FirebaseDatabase.getInstance().getReference("Schools").child(SCHOOL_ID);
+                            dR.setValue(sc);
+                            SchoolActivity.super.onBackPressed();
+
+                            Toast.makeText(SchoolActivity.this, "School details updated successfully.", Toast.LENGTH_SHORT);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+            }
         }
     }
 

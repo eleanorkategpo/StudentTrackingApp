@@ -38,6 +38,7 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
     private RadioButton Female, Male;
     private Button AddBtn;
     private String fname, lname, gender, birthday, email, password, address, phone_number, SCHOOL_ID;
+    private boolean IS_SCHOOL_ADMIN;
     private Spinner School;
 
     private ProgressDialog progressDialog;
@@ -61,10 +62,12 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
         setupUIViews();
         initLayout();
         SCHOOL_ID = getSchool();
-
     }
 
     private void setupUIViews() {
+        firebaseAuth = FirebaseAuth.getInstance();
+        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+
         AddBtn = (Button)getView().findViewById(R.id.addBtn);
         FName = (EditText)getView().findViewById(R.id.fname);
         LName = (EditText)getView().findViewById(R.id.lname);
@@ -85,10 +88,8 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
         School.setSelection(0);
 
         progressDialog = new ProgressDialog(this.getContext());
-
-        firebaseAuth = FirebaseAuth.getInstance();
-        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         userTable = FirebaseDatabase.getInstance().getReference("Users");
+
     }
 
     private void initLayout() {
@@ -189,8 +190,9 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
                             if (task.isSuccessful()) {
                                 Toast.makeText(getActivity(), "Registration Successful!", Toast.LENGTH_SHORT).show();
                                 startActivity(new Intent(getActivity(), SchoolAdminActivity.class));
-                                progressDialog.dismiss();
                             }
+
+                            progressDialog.dismiss();
                         }
                     }).addOnFailureListener(new OnFailureListener() {
                         @Override
@@ -225,9 +227,9 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
                 if (dataSnapshot.exists()) {
                     User user = dataSnapshot.getValue(User.class);
                     school_id[0] = user.getSchoolId();
+                    populateSchools(user.getSchoolId());
 
                     if (user.isSuperAdmin()){
-                        populateSchools();
                         School.setEnabled(true);
                     }
                 }
@@ -241,7 +243,7 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
         return school_id[0];
     };
 
-    private void populateSchools() {
+    private void populateSchools(String school_id) {
         Query currentUser = FirebaseDatabase.getInstance().getReference("Schools")
                 .orderByChild("schoolName");
 
@@ -255,7 +257,7 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
                     listOfSchools.add(school.getSchoolName());
                 }
 
-                if (dataSnapshot.getKey().equals(SCHOOL_ID)){
+                if (dataSnapshot.getKey().equals(school_id)){
                     int size = schoolList.size();
                     School.setSelection(size);
                 }
@@ -289,7 +291,7 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
         School.setAdapter(adapter);
         School.setOnItemSelectedListener(this);
 
-    };
+    }
 
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {

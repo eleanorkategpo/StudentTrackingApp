@@ -16,34 +16,33 @@
             android:padding="8dp">
 
             <TextView
-                android:id="@+id/studentID"
+                android:id="@+id/adminID"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="5dp"
-                android:text="Student ID: "
+                android:text="Admin ID: "
                 android:textAppearance="@style/TextAppearance.AppCompat.Small" />
 
             <TextView
-                android:id="@+id/studentName"
+                android:id="@+id/adminName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="5dp"
-                android:text="Student Name"
+                android:text="Admin Name"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                 android:padding="5dp"
                 android:background="@color/colorPrimary"
                 android:textColor="@color/colorOnPrimary"/>
             <TextView
-                android:id="@+id/schoolName"
+                android:id="@+id/adminEmail"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="School Here"/>
+                android:text="Email"/>
             <TextView
-                android:id="@+id/yearAndSection"
+                android:id="@+id/adminPhone"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Year - Section"/>
-
+                android:text="Phone Number"/>
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>

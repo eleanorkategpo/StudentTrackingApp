@@ -44,6 +44,7 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
     private TextView noData;
 
     private String SCHOOL_ID;
+    private int USER_TYPE;
     private ArrayList<User> studentList = new ArrayList<>();
     private ArrayList<School> schoolList = new ArrayList<>();
     private ArrayList<String> listOfSchools = new ArrayList<>();
@@ -76,9 +77,6 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
         StudentList = (RecyclerView)findViewById(R.id.studentList);
         StudentList.setHasFixedSize(true);
         StudentList.setLayoutManager(new LinearLayoutManager(this));
-
-        studentList.clear();
-        schoolList.clear();
     }
 
     private void initLayout() {
@@ -97,6 +95,8 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
                 if (dataSnapshot.exists()) {
                     User user = dataSnapshot.getValue(User.class);
                     SCHOOL_ID = user.getSchoolId();
+                    USER_TYPE = user.getUserType();
+
                     getAllSchools();
                     progressDialog.dismiss();
 
@@ -169,6 +169,11 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
         progressDialog.setCancelable(false);
         progressDialog.show();
 
+        adapter = null;
+        studentAdapter = null;
+        studentList.clear();
+        schoolList.clear();
+
         Query currentUser = FirebaseDatabase.getInstance().getReference("Users")
                 .orderByChild("schoolId")
                 .equalTo(SCHOOL_ID);
@@ -179,7 +184,7 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
                 if (dataSnapshot.exists()) {
                     for (DataSnapshot snap : dataSnapshot.getChildren()) {
                         User user = snap.getValue(User.class);
-                        if (user.getUserType() == 3) {
+                        if (user.getUserType() == 3 && !studentList.contains(user)) {
                             studentList.add(user);
                         }
                     }
@@ -198,6 +203,7 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
     private void setupRV() {
         studentAdapter = new StudentAdapter(this, studentList, this );
         StudentList.setAdapter(studentAdapter);
+        studentAdapter.notifyDataSetChanged();
 
         if (studentList.size() == 0) {
             noData.setVisibility(View.VISIBLE);
@@ -226,6 +232,7 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
                 }
                 break;
             case R.id.viewAdmins:
+                startActivity( new Intent(SchoolAdminActivity.this, ViewAdmins.class ));
                 break;
             case R.id.viewStudents:
                 startActivity(new Intent(SchoolAdminActivity.this, SchoolAdminActivity.class));
@@ -253,7 +260,8 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
 
                 return true;
             case R.id.addUsers:
-                startActivity(new Intent(SchoolAdminActivity.this, RegisterActivity.class));
+                Intent i = new Intent(SchoolAdminActivity.this, RegisterActivity.class);
+                startActivity(i);
                 return true;
             case R.id.logoutItem:
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -286,7 +294,7 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
 
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-        if(i != 0) {
+        if(i != 0 && schoolList.size() > 0) {
             School school = schoolList.get(i - 1);
             SCHOOL_ID = school.getSchoolId();
 
@@ -310,7 +318,7 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
         progressDialog.setMessage("Please wait..");
         progressDialog.show();
         User u = studentList.get(position);
-        Intent intent = new Intent(SchoolAdminActivity.this, StudentActivity.class);
+        Intent intent = new Intent(SchoolAdminActivity.this, ParentActivity.class);
         intent.putExtra("USER_ID", u.getUserId());
         intent.putExtra("SCHOOL_ADMIN", "true");
         startActivity(intent);

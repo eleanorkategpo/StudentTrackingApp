@@ -28,7 +28,7 @@ public class SendEmail extends AppCompatActivity {
     private EditText mEditTextTo;
     private EditText mEditTextSubject;
     private EditText mEditTextMessage;
-    private String emailList;
+    private String emailList, isAdmin;
     private FirebaseAuth firebaseAuth;
 
     @Override
@@ -85,8 +85,16 @@ public class SendEmail extends AppCompatActivity {
         mEditTextTo.setText(emailList);
         mEditTextSubject = findViewById(R.id.edit_text_subject);
         mEditTextMessage = findViewById(R.id.edit_text_message);
-        getUser();
-        getLocation();
+        isAdmin = getIntent().getStringExtra("IS_ADMIN");
+
+        if (isAdmin.equals("false")) {
+            getUser();
+            getLocation();
+        } else if (isAdmin.equals("true")) {
+            mEditTextTo.setText(emailList);
+            mEditTextSubject.setText("Important: School admin and Parent wants to know your location");
+            mEditTextMessage.setText("Hello! Kindly send your location as soon as possible. Thank you");
+        }
     }
 
     private void initLayout() {

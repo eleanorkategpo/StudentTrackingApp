@@ -239,11 +239,14 @@ public class AddStudentFragment extends Fragment implements AdapterView.OnItemSe
                     User user = dataSnapshot.getValue(User.class);
                     school_id[0] = user.getSchoolId();
 
+                    populateSchools(user.getSchoolId());
+
                     if (user.isSuperAdmin()){
-                        populateSchools();
                         School.setEnabled(true);
                     }
                 }
+
+                progressDialog.dismiss();
             }
 
             @Override
@@ -254,7 +257,7 @@ public class AddStudentFragment extends Fragment implements AdapterView.OnItemSe
         return school_id[0];
     }
 
-    private void populateSchools() {
+    private void populateSchools(String school_id) {
         Query currentUser = FirebaseDatabase.getInstance().getReference("Schools")
                 .orderByChild("schoolName");
 
@@ -267,7 +270,7 @@ public class AddStudentFragment extends Fragment implements AdapterView.OnItemSe
                     listOfSchools.add(school.getSchoolName());
                 }
 
-                if (dataSnapshot.getKey().equals(SCHOOL_ID)){
+                if (dataSnapshot.getKey().equals(school_id)){
                     int size = schoolList.size();
                     School.setSelection(size);
                 }
@@ -388,11 +391,7 @@ public class AddStudentFragment extends Fragment implements AdapterView.OnItemSe
                 }
                 break;
             case R.id.section:
-                if (i != 0) {
-                    section = listOfSection.get(i);
-                } else {
-                    section = "";
-                }
+                section = listOfSection.get(i);
                 break;
         }
     }
