@@ -208,7 +208,7 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
         if (studentList.size() == 0) {
             noData.setVisibility(View.VISIBLE);
         } else {
-            noData.setVisibility(View.INVISIBLE);
+            noData.setVisibility(View.GONE);
         }
 
     }

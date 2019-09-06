@@ -67,7 +67,6 @@ public class AddParentFragment extends Fragment implements AdapterView.OnItemSel
     }
 
     private void setupUIViews(){
-        firebaseAuth = FirebaseAuth.getInstance();
 
         AddBtn = (Button)getView().findViewById(R.id.addBtn);
         FName = (EditText)getView().findViewById(R.id.fname);
@@ -180,8 +179,6 @@ public class AddParentFragment extends Fragment implements AdapterView.OnItemSel
 
     private void addParent() {
         //name, gender, birthday, email, password=temporarypass, address, phoneNumber, year, section, childId, isActive=1, userType = 2;
-
-        getStrings();
         progressDialog.setMessage("Creating user...");
         progressDialog.show();
 
@@ -202,8 +199,8 @@ public class AddParentFragment extends Fragment implements AdapterView.OnItemSel
                             if (task.isSuccessful()) {
                                 Toast.makeText(getActivity(), "Registration Successful!", Toast.LENGTH_SHORT).show();
                                 startActivity(new Intent(getActivity(), LoginActivity.class));
-                                progressDialog.dismiss();
                             }
+                            progressDialog.dismiss();
                         }
                     }).addOnFailureListener(new OnFailureListener() {
                         @Override

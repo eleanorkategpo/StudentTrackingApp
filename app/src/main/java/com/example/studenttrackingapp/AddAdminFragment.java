@@ -176,6 +176,9 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
         progressDialog.setMessage("Creating user...");
         progressDialog.show();
 
+        userTable = FirebaseDatabase.getInstance().getReference("Users");
+        firebaseAuth = FirebaseAuth.getInstance();
+
         firebaseAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {

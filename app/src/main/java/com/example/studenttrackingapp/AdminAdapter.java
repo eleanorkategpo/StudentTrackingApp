@@ -35,10 +35,10 @@ public class AdminAdapter extends RecyclerView.Adapter<AdminAdapter.AdminAdapter
     @Override
     public void onBindViewHolder(@NonNull AdminAdapterViewHolder holder, int position) {
         User admin = adminList.get(position);
-        holder.adminID.setText("Student ID: " + admin.getUserId());
+        holder.adminID.setText("Admin ID: " + admin.getUserId());
         holder.adminName.setText(admin.getLastName() + ", " + admin.getFirstName());
         holder.adminEmail.setText(admin.getEmail());
-        holder.adminPhone.setText(admin.getPhoneNumber());
+        holder.adminPhone.setText(admin.getPhoneNumber().equals("") || admin.getPhoneNumber() == null ? "N/A" : admin.getPhoneNumber());
     }
 
     @Override

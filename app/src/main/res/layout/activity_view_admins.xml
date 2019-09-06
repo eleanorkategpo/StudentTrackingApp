@@ -4,9 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="20dp"
     android:gravity="center_horizontal"
+    android:padding="30dp"
+    android:orientation="vertical"
     tools:context=".ViewAdmins">
 
     <TextView
@@ -18,15 +18,15 @@
         android:id="@+id/noData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="invisible"
+        android:visibility="gone"
         android:text="NO DATA"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/adminList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp">
-    </androidx.recyclerview.widget.RecyclerView>
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp" />
 
 </LinearLayout>
