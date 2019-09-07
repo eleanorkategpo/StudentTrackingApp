@@ -61,18 +61,19 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
     }
 
     private void setupUIViews() {
+
+        progressDialog = new ProgressDialog(this);
         noData = (TextView)findViewById(R.id.noData);
 
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        progressDialog = new ProgressDialog(this);
 
         allSchools = (Spinner)findViewById(R.id.changeSchool);
         allSchools.setEnabled(false);
 
         if (!listOfSchools.contains("-- Select school --")) {
             listOfSchools.add("-- Select school --");
-            schoolList.add(null);
+            //schoolList.add(null);
         }
 
         StudentList = (RecyclerView)findViewById(R.id.studentList);
@@ -227,7 +228,9 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
                 }
                 break;
             case R.id.viewAdmins:
-                startActivity( new Intent(SchoolAdminActivity.this, ViewAdmins.class ));
+                Intent ii =  new Intent(SchoolAdminActivity.this, ViewAdmins.class );
+                ii.putExtra("SCHOOL_ID", SCHOOL_ID);
+                startActivity(ii);
                 break;
             case R.id.viewStudents:
                 startActivity(new Intent(SchoolAdminActivity.this, SchoolAdminActivity.class));
@@ -305,7 +308,7 @@ public class SchoolAdminActivity extends AppCompatActivity implements AdapterVie
         }*/
         if (i > 0){
             if (schoolList.size() > 0) {
-                School school = schoolList.get(i);
+                School school = schoolList.get(i - 1);
                 SCHOOL_ID = school.getSchoolId();
                 getAllStudentsBySchool();
             }

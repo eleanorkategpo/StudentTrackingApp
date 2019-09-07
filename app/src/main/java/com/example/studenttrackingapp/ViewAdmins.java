@@ -43,9 +43,7 @@ public class ViewAdmins extends AppCompatActivity implements AdminAdapter.OnRequ
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         progressDialog = new ProgressDialog(this);
-
         setContentView(R.layout.activity_view_admins);
-
         setupUIViews();
         getUser();
     }
@@ -67,7 +65,7 @@ public class ViewAdmins extends AppCompatActivity implements AdminAdapter.OnRequ
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     User user = dataSnapshot.getValue(User.class);
-                    SCHOOL_ID = user.getSchoolId();
+                    SCHOOL_ID = user.getSchoolId().isEmpty() ? getIntent().getStringExtra("SCHOOL_ID") : user.getSchoolId();
                     getAdmins();
                 }
             }
