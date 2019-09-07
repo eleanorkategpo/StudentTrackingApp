@@ -36,7 +36,7 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
     private FirebaseAuth firebaseAuth;
     private FirebaseUser firebaseUser;
 
-    private String USER_ID, SCHOOL_ID, YEAR, SECTION, CHILD_ID;
+    private String USER_ID, SCHOOL_ID, YEAR, SECTION, CHILD_ID, NEW_CHILD_ID;
 
     private Spinner School, Child;
     private EditText FName, LName, Birthday, Email, Password, Address, PhoneNumber;
@@ -128,9 +128,6 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
             Child.setEnabled(false);
         } else if (user_type == 3){ // student
             Year = (Spinner)findViewById(R.id.year);
-            if (!listOfYear.contains("-- Select year --")) {
-                listOfYear.add("-- Select year --");
-            }
             Year.setSelection(0);
             Year.setVisibility(View.VISIBLE);
 
@@ -143,60 +140,62 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
         SaveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!Password.getText().toString().equals("")) { //update password
-                    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                    if (user != null){
-                        user.updatePassword(Password.getText().toString())
-                            .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()){
-                                        Toast.makeText(EditProfile.this, "Password updated successfully.", Toast.LENGTH_SHORT).show();
-                                    } else {
-                                        Toast.makeText(EditProfile.this, "Something went wrong while updating the password.", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                            });
-                    }
-                }
-
-                Query profile = FirebaseDatabase.getInstance().getReference("Users").child(USER_ID);
-                profile.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()) {
-                            User myProfile = dataSnapshot.getValue(User.class);
-
-                            myProfile.setFirstName(FName.getText().toString().trim());
-                            myProfile.setLastName(LName.getText().toString().trim());
-                            myProfile.setGender((Female.isChecked()) ? "Female" : "Male");
-                            myProfile.setBirthday(Birthday.getText().toString().trim());
-                            myProfile.setAddress(Address.getText().toString().trim());
-                            myProfile.setPhoneNumber(PhoneNumber.getText().toString().trim());
-
-                            if (USER_TYPE == 3) { //student
-                                if (YEAR != null) {
-                                    myProfile.setYear(YEAR);
-                                }
-                                if (SECTION != null) {
-                                    myProfile.setSection(SECTION);
-                                }
-                            }
-
-                            DatabaseReference dR = FirebaseDatabase.getInstance().getReference("Users").child(USER_ID);
-                            dR.setValue(myProfile);
-
-                            Toast.makeText(EditProfile.this, "Profile updated successfully.", Toast.LENGTH_SHORT).show();
-                            EditProfile.super.onBackPressed();
-                            progressDialog.dismiss();
+                if (validate()) {
+                    if (!Password.getText().toString().equals("")) { //update password
+                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                        if (user != null) {
+                            user.updatePassword(Password.getText().toString())
+                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if (task.isSuccessful()) {
+                                                Toast.makeText(EditProfile.this, "Password updated successfully.", Toast.LENGTH_SHORT).show();
+                                            } else {
+                                                Toast.makeText(EditProfile.this, "Something went wrong while updating the password.", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    });
                         }
                     }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                    Query profile = FirebaseDatabase.getInstance().getReference("Users").child(USER_ID);
+                    profile.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.exists()) {
+                                User myProfile = dataSnapshot.getValue(User.class);
 
-                    }
-                });
+                                myProfile.setFirstName(FName.getText().toString().trim());
+                                myProfile.setLastName(LName.getText().toString().trim());
+                                myProfile.setGender((Female.isChecked()) ? "Female" : "Male");
+                                myProfile.setBirthday(Birthday.getText().toString().trim());
+                                myProfile.setAddress(Address.getText().toString().trim());
+                                myProfile.setPhoneNumber(PhoneNumber.getText().toString().trim());
+
+                                if (USER_TYPE == 3) { //student
+                                    if (YEAR != null) {
+                                        myProfile.setYear(YEAR);
+                                    }
+                                    if (SECTION != null) {
+                                        myProfile.setSection(SECTION);
+                                    }
+                                }
+
+                                DatabaseReference dR = FirebaseDatabase.getInstance().getReference("Users").child(USER_ID);
+                                dR.setValue(myProfile);
+
+                                Toast.makeText(EditProfile.this, "Profile updated successfully.", Toast.LENGTH_SHORT).show();
+                                EditProfile.super.onBackPressed();
+                                progressDialog.dismiss();
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
+                }
             }
         });
 
@@ -213,6 +212,46 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
                 Female.setChecked(false);
             }
         });
+    }
+
+    private boolean validate() {
+        String fname = FName.getText().toString();
+        String lname = LName.getText().toString();
+        String birthday = Birthday.getText().toString().trim();
+        String gender = (Female.isChecked()) ? "Female" : "Male";
+        String email = Email.getText().toString();
+        String password = Password.getText().toString();
+        String address = Address.getText().toString();
+        String phone_number = PhoneNumber.getText().toString();
+        String email_regex = "^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$";
+
+        if (email.isEmpty() || fname.isEmpty() || lname.isEmpty()) {
+            Toast.makeText(this, "Please input name and " +
+                    "email of the user.", Toast.LENGTH_SHORT).show();
+        }
+        else if (password.length() != 0 && password.length() < 6) {
+            Toast.makeText(this, "Password should have 6 or more characters.", Toast.LENGTH_SHORT).show();
+        }
+        else if (!email.matches(email_regex)) {
+            Toast.makeText(this, "Email address is not valid.", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            return true;
+        }
+
+        if (USER_TYPE == 2) { //parent
+            if (NEW_CHILD_ID.isEmpty()) {
+                Toast.makeText(this, "Please enter child.", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        if (USER_TYPE == 3) { //student
+            if (YEAR.isEmpty() || SECTION.isEmpty()) {
+                Toast.makeText(this, "Year and section is required.", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        return false;
     }
 
     private void getSchools(){
@@ -452,10 +491,10 @@ public class EditProfile extends AppCompatActivity implements AdapterView.OnItem
             case R.id.section:
                 SECTION = listOfSection.get(i);
                 break;
-            /*case R.id.myChild:
+            case R.id.myChild:
                     User myChild = childList.get(i);
                     NEW_CHILD_ID = myChild.getUserId();
-                break;*/
+                break;
 
         }
     }

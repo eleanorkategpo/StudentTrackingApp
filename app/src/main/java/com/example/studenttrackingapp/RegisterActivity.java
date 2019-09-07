@@ -26,8 +26,8 @@ public class RegisterActivity extends AppCompatActivity {
         tabLayout = (TabLayout) findViewById(R.id.tabLayout);
         adapter = new TabAdapter(getSupportFragmentManager());
         adapter.addFragment(new AddAdminFragment(), "Admin");
-        adapter.addFragment(new AddStudentFragment(), "Student");
         adapter.addFragment(new AddParentFragment(), "Parent");
+        adapter.addFragment(new AddStudentFragment(), "Student");
         viewPager.setAdapter(adapter);
         tabLayout.setupWithViewPager(viewPager);
 

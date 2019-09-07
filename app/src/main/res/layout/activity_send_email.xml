@@ -44,8 +44,12 @@
 
     <Button
         android:id="@+id/button_send"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="send" />
+        android:layout_gravity="center_horizontal"
+        android:padding="20dp"
+        android:backgroundTint="@color/colorPrimaryDark"
+        android:textColor="@color/colorAccent"
+        android:text="Send Message" />
 
 </LinearLayout>

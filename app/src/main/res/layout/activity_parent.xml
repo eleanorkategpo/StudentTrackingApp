@@ -79,6 +79,8 @@
                 android:layout_gravity="center"
                 android:visibility="gone"
                 android:padding="20dp"
+                android:backgroundTint="@color/colorPrimaryDark"
+                android:textColor="@color/colorAccent"
                 android:text="Contact Student"/>
         </LinearLayout>
     </ScrollView>

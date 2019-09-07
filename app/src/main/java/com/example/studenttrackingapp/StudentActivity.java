@@ -144,6 +144,10 @@ public class StudentActivity extends AppCompatActivity implements OnMapReadyCall
     }
 
     private void requestLocation() {
+        progressDialog.setMessage("Please wait...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[] {
@@ -196,6 +200,7 @@ public class StudentActivity extends AppCompatActivity implements OnMapReadyCall
                         }
                     }
 
+                    progressDialog.dismiss();
                     sendLocation(false);
                 }
                 else {

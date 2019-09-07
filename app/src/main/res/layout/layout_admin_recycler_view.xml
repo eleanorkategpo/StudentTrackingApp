@@ -32,8 +32,8 @@
                 android:text="Admin Name"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                 android:padding="5dp"
-                android:background="@color/colorPrimary"
-                android:textColor="@color/colorOnPrimary"/>
+                android:background="@color/colorPrimaryDark"
+                android:textColor="@color/colorAccent"/>
             <TextView
                 android:id="@+id/adminEmail"
                 android:layout_width="wrap_content"

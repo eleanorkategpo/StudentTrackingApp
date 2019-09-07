@@ -82,10 +82,10 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
         Address = (EditText)getView().findViewById(R.id.address);
         School = (Spinner)getView().findViewById(R.id.changeSchool);
         School.setEnabled(false);
-        if (!listOfSchools.contains("-- Select school --")) {
+       /* if (!listOfSchools.contains("-- Select school --")) {
             listOfSchools.add("-- Select school --");
         }
-        School.setSelection(0);
+        School.setSelection(0);*/
 
         progressDialog = new ProgressDialog(this.getContext());
         userTable = FirebaseDatabase.getInstance().getReference("Users");
@@ -192,7 +192,7 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
                                 Toast.makeText(getActivity(), "Registration Successful!", Toast.LENGTH_SHORT).show();
-                                startActivity(new Intent(getActivity(), SchoolAdminActivity.class));
+                                startActivity(new Intent(getActivity(), LoginActivity.class));
                             }
 
                             progressDialog.dismiss();
@@ -249,38 +249,27 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
     private void populateSchools(String school_id) {
         Query currentUser = FirebaseDatabase.getInstance().getReference("Schools")
                 .orderByChild("schoolName");
-
-        currentUser.addChildEventListener(new ChildEventListener() {
+        currentUser.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                School school = dataSnapshot.getValue(School.class);
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    for (DataSnapshot snap : dataSnapshot.getChildren()) {
+                        School school = snap.getValue(School.class);
+                        if (!listOfSchools.contains(school.getSchoolName())) {
+                            schoolList.add(school);
+                            listOfSchools.add(school.getSchoolName());
+                        }
 
-                if (!listOfSchools.contains(school.getSchoolName())) {
-                    schoolList.add(school);
-                    listOfSchools.add(school.getSchoolName());
+                        if (snap.getKey().equals(school_id)){
+                            int size = schoolList.size();
+                            School.setSelection(size);
+                        }
+                    }
+                    setupSpinner();
+                } else {
+                    Toast.makeText(getActivity(), "Something went wrong...", Toast.LENGTH_SHORT).show();
                 }
-
-                if (dataSnapshot.getKey().equals(school_id)){
-                    int size = schoolList.size();
-                    School.setSelection(size);
-                }
-
                 progressDialog.dismiss();
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
             }
 
             @Override
@@ -288,18 +277,19 @@ public class AddAdminFragment extends Fragment implements AdapterView.OnItemSele
 
             }
         });
+    }
 
+    private void setupSpinner() {
         adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, listOfSchools);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         School.setAdapter(adapter);
         School.setOnItemSelectedListener(this);
-
     }
 
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-        if (i != 0) { // not --select type--
-            School school = schoolList.get(i - 1);
+        if (i >= 0) { // not --select type--
+            School school = schoolList.get(i);
             SCHOOL_ID = school.getSchoolId();
         } else {
             SCHOOL_ID = "";

@@ -42,6 +42,8 @@ public class ViewAdmins extends AppCompatActivity implements AdminAdapter.OnRequ
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        progressDialog = new ProgressDialog(this);
+
         setContentView(R.layout.activity_view_admins);
 
         setupUIViews();
@@ -78,17 +80,10 @@ public class ViewAdmins extends AppCompatActivity implements AdminAdapter.OnRequ
     }
 
     private void setupRV() {
-        progressDialog = new ProgressDialog(this);
         adminAdapter = new AdminAdapter(this, adminList, this );
         AdminList.setAdapter(adminAdapter);
         adminAdapter.notifyDataSetChanged();
-
-        if (adminList.size() == 0) {
-            noData.setVisibility(View.VISIBLE);
-        } else {
-
-            noData.setVisibility(View.INVISIBLE);
-        }
+        noData.setVisibility(View.GONE);
     }
 
     private void getAdmins() {
@@ -113,6 +108,8 @@ public class ViewAdmins extends AppCompatActivity implements AdminAdapter.OnRequ
                     }
                     if (adminList.size() > 0) {
                         setupRV();
+                    } else {
+                        noData.setVisibility(View.VISIBLE);
                     }
                 }
             }

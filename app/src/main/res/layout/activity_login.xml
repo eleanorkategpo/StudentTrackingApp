@@ -9,13 +9,10 @@
     android:orientation="vertical"
     tools:context=".LoginActivity">
 
-    <TextView
+    <ImageView
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="PWC EYE"
-        android:textAppearance="@style/TextAppearance.AppCompat.Display2"
-        android:textColor="@color/colorPrimaryDark"
-        android:textStyle="bold" />
+        android:layout_height="30dp"
+        app:srcCompat="@drawable/logo_3" />
 
     <ImageView
         android:id="@+id/imageView"
@@ -25,18 +22,22 @@
 
     <EditText
         android:id="@+id/emailET"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="30dp"
+        android:layout_marginLeft="80dp"
+        android:layout_marginRight="80dp"
         android:ems="10"
         android:hint="Email"
         android:inputType="textPersonName" />
 
     <EditText
         android:id="@+id/passwordET"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
+        android:layout_marginLeft="80dp"
+        android:layout_marginRight="80dp"
         android:ems="10"
         android:hint="Password"
         android:inputType="textPassword"
@@ -50,6 +51,6 @@
         android:layout_marginTop="20dp"
         android:padding="20dp"
         android:background="@color/colorPrimaryDark"
-        android:textColor="@color/colorOnPrimary"
+        android:textColor="@color/colorAccent"
         android:text="Login"/>
 </LinearLayout>

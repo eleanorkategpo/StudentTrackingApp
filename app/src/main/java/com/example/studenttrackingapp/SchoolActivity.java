@@ -83,6 +83,8 @@ public class SchoolActivity extends AppCompatActivity {
         Save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                progressDialog.setMessage("Please wait...");
+                progressDialog.show();
                 int type = (SCHOOL_STATUS.equals("add")) ? 0 : 2;
                 saveDetails(type);
             }
@@ -133,9 +135,8 @@ public class SchoolActivity extends AppCompatActivity {
                     } else {
                         Address.setText(school.getSchoolAddress());
                     }
-
-                    progressDialog.dismiss();
                 }
+                progressDialog.dismiss();
             }
 
             @Override
@@ -164,7 +165,7 @@ public class SchoolActivity extends AppCompatActivity {
         });
     }
 
-    private void saveDetails(int type) { //type = 0: save all, 1: add edit
+    private void saveDetails(int type) { //type = 0: save all, 1: add edit address, 2: edit
         id = ID.getText().toString().trim();
         name = Name.getText().toString().trim();
         address = Address.getText().toString().trim();
@@ -192,48 +193,35 @@ public class SchoolActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
-                            if (type == 0) {
 
-                                Query request = FirebaseDatabase.getInstance().getReference("Users").child(firebaseUser.getUid());
-                                request.addListenerForSingleValueEvent(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(DataSnapshot dataSnapshot) {
-                                        if (dataSnapshot.exists()) {
-                                            User user = dataSnapshot.getValue(User.class);
-                                            if (SCHOOL_STATUS.equals("add")) {
-                                                user.setSchoolId(id);
-                                            } else {
-                                                user.setSchoolId(SCHOOL_ID);
-                                            }
-
-                                            DatabaseReference dR = FirebaseDatabase.getInstance().getReference("Users").child(firebaseUser.getUid());
-                                            dR.setValue(user);
+                            Query request = FirebaseDatabase.getInstance().getReference("Users").child(firebaseUser.getUid());
+                            request.addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    if (dataSnapshot.exists()) {
+                                        User user = dataSnapshot.getValue(User.class);
+                                        if (SCHOOL_STATUS.equals("add")) {
+                                            user.setSchoolId(id);
+                                        } else {
+                                            user.setSchoolId(SCHOOL_ID);
                                         }
+
+                                        DatabaseReference dR = FirebaseDatabase.getInstance().getReference("Users").child(firebaseUser.getUid());
+                                        dR.setValue(user);
                                     }
+                                }
 
-                                    @Override
-                                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                                    }
-                                });
+                                }
+                            });
 
-
-                                Toast.makeText(SchoolActivity.this, "School " + name + " is successfully added!", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(SchoolActivity.this, SchoolAdminActivity.class);
-                                startActivity(intent);
-                                progressDialog.dismiss();
-                            } else if (type == 1) { //type 1: add edit address
-
-                                progressDialog.setMessage("Loading maps...");
-                                progressDialog.show();
-                                Intent intent = new Intent(SchoolActivity.this, AddressActivity.class);
-                                intent.putExtra("SCHOOL_ID", id);
-                                startActivity(intent);
-                                progressDialog.dismiss();
-                            }
+                            Toast.makeText(SchoolActivity.this, "School " + name + " is successfully added!", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(SchoolActivity.this, SchoolAdminActivity.class);
+                            startActivity(intent);
                             progressDialog.dismiss();
                         }
-
                     }
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
@@ -242,9 +230,16 @@ public class SchoolActivity extends AppCompatActivity {
                         progressDialog.dismiss();
                     }
                 });
-            }
+            } else if (type == 1) { //type 1: add edit address
 
-            if (type == 2) { //edit existing
+                progressDialog.setMessage("Loading maps...");
+                progressDialog.show();
+                Intent intent = new Intent(SchoolActivity.this, AddressActivity.class);
+                intent.putExtra("SCHOOL_ID", id);
+                startActivity(intent);
+                progressDialog.dismiss();
+
+            } else if (type == 2) { //edit existing
                 Query school = FirebaseDatabase.getInstance().getReference("Schools").child(SCHOOL_ID);
 
                 school.addListenerForSingleValueEvent(new ValueEventListener() {

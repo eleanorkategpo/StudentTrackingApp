@@ -67,6 +67,8 @@ public class AddParentFragment extends Fragment implements AdapterView.OnItemSel
     }
 
     private void setupUIViews(){
+        userTable = FirebaseDatabase.getInstance().getReference("Users");
+        firebaseAuth = FirebaseAuth.getInstance();
 
         AddBtn = (Button)getView().findViewById(R.id.addBtn);
         FName = (EditText)getView().findViewById(R.id.fname);
@@ -84,16 +86,13 @@ public class AddParentFragment extends Fragment implements AdapterView.OnItemSel
 
         School = (Spinner)getView().findViewById(R.id.changeSchool);
         School.setEnabled(false);
-        if (!listOfSchools.contains("-- Select school --")) {
+       /* if (!listOfSchools.contains("-- Select school --")) {
             listOfSchools.add("-- Select school --");
         }
-        School.setSelection(0);
+        School.setSelection(0);*/
 
         Child = (Spinner)getView().findViewById(R.id.myChild);
-        if (!listOfStudents.contains("--Select child--")) {
-            listOfStudents.add("--Select child--");
-        }
-        Child.setSelection(0);
+        CHILD_ID = "";
     }
 
     private void initLayout(){
@@ -147,7 +146,7 @@ public class AddParentFragment extends Fragment implements AdapterView.OnItemSel
         password = Password.getText().toString();
         address = Address.getText().toString();
         phone_number = PhoneNumber.getText().toString();
-        SCHOOL_ID = "";
+        //SCHOOL_ID = "";
         //child = Child.getText().toString();
     }
 
@@ -181,9 +180,6 @@ public class AddParentFragment extends Fragment implements AdapterView.OnItemSel
         //name, gender, birthday, email, password=temporarypass, address, phoneNumber, year, section, childId, isActive=1, userType = 2;
         progressDialog.setMessage("Creating user...");
         progressDialog.show();
-
-        userTable = FirebaseDatabase.getInstance().getReference("Users");
-        firebaseAuth = FirebaseAuth.getInstance();
 
         firebaseAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
@@ -241,6 +237,8 @@ public class AddParentFragment extends Fragment implements AdapterView.OnItemSel
                     if (user.isSuperAdmin()){
                         School.setEnabled(true);
                     }
+                } else {
+                    Toast.makeText(getActivity(), "No schools in this database.", Toast.LENGTH_SHORT).show();
                 }
                 progressDialog.dismiss();
             }
@@ -257,36 +255,25 @@ public class AddParentFragment extends Fragment implements AdapterView.OnItemSel
         Query currentUser = FirebaseDatabase.getInstance().getReference("Schools")
                 .orderByChild("schoolName");
 
-        currentUser.addChildEventListener(new ChildEventListener() {
+        currentUser.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                School school = dataSnapshot.getValue(School.class);
-                if (!listOfSchools.contains(school.getSchoolName())) {
-                    schoolList.add(school);
-                    listOfSchools.add(school.getSchoolName());
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    for (DataSnapshot snap : dataSnapshot.getChildren()) {
+                        School school = snap.getValue(School.class);
+                        if (!listOfSchools.contains(school.getSchoolName())) {
+                            schoolList.add(school);
+                            listOfSchools.add(school.getSchoolName());
+                        }
+
+                        if (snap.getKey().equals(school_id)){
+                            int size = schoolList.size();
+                            School.setSelection(size);
+                        }
+                    }
+                    setupSpinner("schools");
+                    progressDialog.dismiss();
                 }
-
-                if (dataSnapshot.getKey().equals(school_id)){
-                    int size = schoolList.size();
-                    School.setSelection(size);
-                }
-
-                progressDialog.dismiss();
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
             }
 
             @Override
@@ -294,11 +281,6 @@ public class AddParentFragment extends Fragment implements AdapterView.OnItemSel
 
             }
         });
-
-        adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, listOfSchools);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        School.setAdapter(adapter);
-        School.setOnItemSelectedListener(this);
     }
 
     private void getChild(String school_id) {
@@ -320,8 +302,11 @@ public class AddParentFragment extends Fragment implements AdapterView.OnItemSel
                             listOfStudents.add(student.getLastName() + ", " + student.getFirstName() + " (" + student.getYear() + " - " + student.getSection() + ")");
                         }
                     }
-                    progressDialog.dismiss();
+                    setupSpinner("child");
+                } else {
+                    Toast.makeText(getActivity(), "There are no students added in this school, you can't add a parent.", Toast.LENGTH_SHORT).show();
                 }
+                progressDialog.dismiss();
             }
 
             @Override
@@ -329,11 +314,20 @@ public class AddParentFragment extends Fragment implements AdapterView.OnItemSel
 
             }
         });
+    }
 
-        adapterChild = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, listOfStudents);
-        adapterChild.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        Child.setAdapter(adapterChild);
-        Child.setOnItemSelectedListener(this);
+    private void setupSpinner(String type) {
+        if (type.equals("schools")) {
+            adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, listOfSchools);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            School.setAdapter(adapter);
+            School.setOnItemSelectedListener(this);
+        } else if (type.equals("child")){
+            adapterChild = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, listOfStudents);
+            adapterChild.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            Child.setAdapter(adapterChild);
+            Child.setOnItemSelectedListener(this);
+        }
     }
 
     @Override
@@ -341,8 +335,8 @@ public class AddParentFragment extends Fragment implements AdapterView.OnItemSel
         int id = adapterView.getId();
         switch (id) {
             case R.id.changeSchool:
-                if (i != 0) { // not --select type--
-                    School school = schoolList.get(i - 1);
+                if (i >= 0) {
+                    School school = schoolList.get(i);
                     SCHOOL_ID = school.getSchoolId();
                     getChild(SCHOOL_ID);
                 } else {
@@ -350,8 +344,8 @@ public class AddParentFragment extends Fragment implements AdapterView.OnItemSel
                 }
                 break;
             case R.id.myChild:
-                if (i != 0) {
-                    User myChild = childList.get(i - 1);
+                if (i >= 0) {
+                    User myChild = childList.get(i);
                     CHILD_ID =  myChild.getUserId();
                 } else {
                     CHILD_ID = "";

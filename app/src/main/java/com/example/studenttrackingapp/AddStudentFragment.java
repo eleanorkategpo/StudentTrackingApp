@@ -84,24 +84,26 @@ public class AddStudentFragment extends Fragment implements AdapterView.OnItemSe
 
         School = (Spinner)getView().findViewById(R.id.changeSchool);
         School.setEnabled(false);
-        if (!listOfSchools.contains("-- Select school --")) {
+        /*if (!listOfSchools.contains("-- Select school --")) {
             listOfSchools.add("-- Select school --");
         }
-        School.setSelection(0);
+        School.setSelection(0);*/
 
         Year = (Spinner)getView().findViewById(R.id.year);
-        if (!listOfYear.contains("-- Select year --")) {
+       /* if (!listOfYear.contains("-- Select year --")) {
             listOfYear.add("-- Select year --");
         }
-        Year.setSelection(0);
+        Year.setSelection(0);*/
         Year.setVisibility(View.INVISIBLE);
+        year = "";
 
         Section = (Spinner)getView().findViewById(R.id.section);
-        if (!listOfSection.contains("-- Select section --")) {
+        /*if (!listOfSection.contains("-- Select section --")) {
             listOfSection.add("-- Select section --");
         }
-        Section.setSelection(0);
+        Section.setSelection(0);*/
         Section.setVisibility(View.INVISIBLE);
+        section = "";
     }
 
     private void initLayout(){
@@ -258,39 +260,30 @@ public class AddStudentFragment extends Fragment implements AdapterView.OnItemSe
     }
 
     private void populateSchools(String school_id) {
-        Query currentUser = FirebaseDatabase.getInstance().getReference("Schools")
+        Query currentSchool = FirebaseDatabase.getInstance().getReference("Schools")
                 .orderByChild("schoolName");
 
-        currentUser.addChildEventListener(new ChildEventListener() {
+        currentSchool.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                School school = dataSnapshot.getValue(School.class);
-                if (!listOfSchools.contains(school.getSchoolName())) {
-                    schoolList.add(school);
-                    listOfSchools.add(school.getSchoolName());
-                }
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    for (DataSnapshot snap : dataSnapshot.getChildren()) {
+                        School school = snap.getValue(School.class);
+                        if (!listOfSchools.contains(school.getSchoolName())) {
+                            schoolList.add(school);
+                            listOfSchools.add(school.getSchoolName());
+                        }
 
-                if (dataSnapshot.getKey().equals(school_id)){
-                    int size = schoolList.size();
-                    School.setSelection(size);
+                        if (snap.getKey().equals(school_id)){
+                            int size = schoolList.size();
+                            School.setSelection(size);
+                        }
+                    }
+                    setupSpinner("schools");
+                } else {
+                    Toast.makeText(getActivity(), "Something went wrong...", Toast.LENGTH_SHORT).show();
                 }
-
                 progressDialog.dismiss();
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
             }
 
             @Override
@@ -298,11 +291,6 @@ public class AddStudentFragment extends Fragment implements AdapterView.OnItemSe
 
             }
         });
-
-        adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, listOfSchools);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        School.setAdapter(adapter);
-        School.setOnItemSelectedListener(this);
     }
 
     private void getYears() {
@@ -324,6 +312,8 @@ public class AddStudentFragment extends Fragment implements AdapterView.OnItemSe
                         yearSections.add(ys);
                     }
                     setupYear();
+                } else {
+                    Toast.makeText(getActivity(), "No year and section in this school. Contact your administrator", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -366,6 +356,14 @@ public class AddStudentFragment extends Fragment implements AdapterView.OnItemSe
         progressDialog.dismiss();
     }
 
+    private void setupSpinner(String type) {
+        if (type.equals("schools")) {
+            adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, listOfSchools);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            School.setAdapter(adapter);
+            School.setOnItemSelectedListener(this);
+        }
+    }
 
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
@@ -373,8 +371,8 @@ public class AddStudentFragment extends Fragment implements AdapterView.OnItemSe
         switch (id)
         {
             case R.id.changeSchool:
-                if (i != 0) { // not --select type--
-                    School school = schoolList.get(i - 1);
+                if (i >= 0) {
+                    School school = schoolList.get(i);
                     SCHOOL_ID = school.getSchoolId();
                     getYears();
                 } else {
@@ -382,7 +380,7 @@ public class AddStudentFragment extends Fragment implements AdapterView.OnItemSe
                 }
                 break;
             case R.id.year:
-                if (i != 0) {
+                if (i >= 0) {
                     year = listOfYear.get(i);
                     getSections(year);
                     Section.setEnabled(true);
